@@ -105,6 +105,21 @@
   .spinner{display:inline-block;width:14px;height:14px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px}
   @keyframes s{to{transform:rotate(360deg)}}
   @media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+  .ai{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;border:1px solid;cursor:help;white-space:nowrap}
+  .ai-hi{color:#ff8a5c;border-color:#ff8a5c;background:#ff8a5c1a}
+  .ai-mid{color:var(--warn);border-color:var(--warn);background:#ffb0201a}
+  .ai-lo{color:var(--muted);border-color:var(--line)}
+  .ai-claude{color:#c9a7ff;border-color:#c9a7ff;background:#c9a7ff1a}
+  .thumbs{display:flex;gap:4px}
+  .thumbs a,.thumbs span{display:block;width:64px;height:36px;border-radius:4px;overflow:hidden;background:var(--panel2);flex:none}
+  .thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+  .tc .thumbs a,.tc .thumbs span{width:auto;flex:1;height:auto;aspect-ratio:16/9}
+  .why{font-size:11px;color:var(--muted);margin:0;padding-left:16px}
+  .why li{margin:2px 0}
+  button.mini-btn{font-size:11px;padding:3px 8px;border-radius:6px}
+  .seg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+  .seg button{font-size:12px;padding:7px 2px}
+  .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
   .help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:14px}
   .help h3{margin:0 0 8px}
   .help ol{margin:0;padding-left:20px;color:var(--muted)}
@@ -135,6 +150,11 @@
       <div><label for="days">Postou nos últimos (dias)</label><input id="days" type="number" min="1" max="90" value="15"></div>
       <div><label for="min_views">Mín. de views</label><input id="min_views" value="100M"><div class="hint">aceita 100M, 1.5B, 500k</div></div>
     </div>
+    <label>Canal criado há no máximo</label>
+    <div class="seg" id="ageSeg">
+      <button type="button" data-v="90">3 meses</button><button type="button" data-v="180">6 meses</button><button type="button" data-v="365">1 ano</button><button type="button" data-v="730">2 anos</button><button type="button" data-v="0">Tanto faz</button>
+    </div>
+    <input type="hidden" id="max_age" value="365">
     <label for="views_mode">As views mínimas contam…</label>
     <select id="views_mode">
       <option value="canal">Total do canal (desde a criação)</option>
@@ -156,11 +176,18 @@
       <div class="row">
         <div><label for="duration">Duração do vídeo</label>
           <select id="duration"><option value="any">Qualquer</option><option value="short">Curto (&lt;4 min / Shorts)</option><option value="medium">Médio (4–20 min)</option><option value="long">Longo (&gt;20 min)</option></select></div>
-        <div><label for="max_age">Idade máx. do canal (dias)</label><input id="max_age" type="number" min="0" value="0"><div class="hint">0 = sem limite</div></div>
+        <div><label for="ai_min">Indício de IA</label>
+          <select id="ai_min"><option value="0">Mostrar todos</option><option value="35">Só possível ou provável IA</option><option value="60">Só provável IA</option></select></div>
       </div>
       <label for="pages">Profundidade da busca</label>
       <select id="pages"><option value="1">1 página por nicho (50 vídeos)</option><option value="2">2 páginas (100 vídeos)</option><option value="3">3 páginas (150 vídeos)</option></select>
       <label class="check"><input type="checkbox" id="use_cache" checked> Reaproveitar resultados das últimas 6h</label>
+    </details>
+    <details id="claudeBox">
+      <summary>Análise de thumbnails com IA (opcional)</summary>
+      <label for="claude_key">Chave da API da Anthropic (Claude)</label>
+      <input id="claude_key" type="password" placeholder="sk-ant-..." autocomplete="off">
+      <div class="hint">Com ela aparece o botão “Analisar com Claude” em cada canal: o Claude olha as 4 thumbnails e os títulos recentes e diz se parecem feitos por IA. Custa centavos por canal, cobrados na sua conta da Anthropic (console.anthropic.com). Sem a chave, a ferramenta usa só a pontuação automática.</div>
     </details>
 
     <div class="quota" id="quota"></div>
@@ -176,7 +203,7 @@
 const API = "https://www.googleapis.com/youtube/v3/";
 const CACHE_HOURS = 6, MAX_DEEP = 200;
 const PRESETS = ["curiosidades","mistérios não resolvidos","histórias reais","true crime","histórias de terror","fatos assustadores","história antiga","conspirações","motivação","finanças","biografia","espaço universo","guerras","reddit stories","horror stories","unsolved mysteries","stoicism","dark history"];
-const FIELDS = ["keywords","days","min_views","views_mode","max_subs","min_ratio","region","language","duration","max_age","pages"];
+const FIELDS = ["keywords","days","min_views","views_mode","max_subs","min_ratio","region","language","duration","max_age","ai_min","pages"];
 const $ = id => document.getElementById(id);
 let lastData = null, sortState = {key:"ratio", dir:-1};
 
@@ -205,9 +232,14 @@ PRESETS.forEach(p => {
   c.onclick = () => { const t = $("keywords"); const l = t.value.split("\n").map(s => s.trim()).filter(Boolean); if (!l.includes(p)) l.push(p); t.value = l.join("\n"); updateQuota(); };
   $("presets").appendChild(c);
 });
-try { const saved = JSON.parse(load("radar_form") || "{}"); FIELDS.forEach(f => { if (saved[f] != null) $(f).value = saved[f]; }); } catch (e) {}
+try { const saved = JSON.parse(load("radar_form_v2") || "{}"); FIELDS.forEach(f => { if (saved[f] != null) $(f).value = saved[f]; }); } catch (e) {}
 if (!$("keywords").value) $("keywords").value = "curiosidades\nhistórias de terror\nmistérios não resolvidos\ntrue crime";
 if (load("radar_key")) $("api_key").value = load("radar_key");
+if (load("radar_claude_key")) $("claude_key").value = load("radar_claude_key");
+$("claude_key").addEventListener("change", () => { store("radar_claude_key", $("claude_key").value.trim() || null); if (lastData) render(); });
+function syncAge() { document.querySelectorAll("#ageSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === $("max_age").value)); }
+document.querySelectorAll("#ageSeg button").forEach(b => b.onclick = () => { $("max_age").value = b.dataset.v; syncAge(); });
+syncAge();
 
 function updateQuota() {
   const n = $("keywords").value.split(/[\n,]/).map(s => s.trim()).filter(Boolean).length;
@@ -247,15 +279,19 @@ class YT {
 /* demo data generator (deterministic) */
 function rng(seed) { let h = 2166136261; for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
 const NAMES = ["Arquivo Sombrio","Mente Curiosa","Casos Frios BR","Noite Eterna","Fatos Ocultos","Vale Estranho","O Desconhecido","Crônicas do Medo","Mundo Bizarro","Lado B da História","Sussurros","Abismo Real","Enigma Diário","Relatos da Madrugada","Segredos Antigos","Universo Paralelo","Histórias que Assustam","Detetive Digital","Planeta Mistério","Cofre de Curiosidades"];
+const DEMO_SUBJ = ["o farol abandonado","a família Silva","o voo 571","a cidade submersa","o diário perdido","a mansão de 1920","o navio fantasma","o túnel proibido"];
+function demoTitle(R, tpl) { const s = DEMO_SUBJ[Math.floor(R() * DEMO_SUBJ.length)];
+  return tpl ? ["A verdade sobre " + s, "O mistério de " + s + " finalmente revelado", "A história sombria de " + s][Math.floor(R() * 3)]
+             : ["Fui até " + s + " de madrugada", "Leitores mandaram: " + s, "Respondendo vocês sobre " + s, s + " | parte " + Math.ceil(R() * 5)][Math.floor(R() * 4)]; }
 class DemoYT extends YT {
   async get(ep, p) {
     this.units += COST[ep] || 1;
     await new Promise(r => setTimeout(r, 60));
     const now = Date.now();
     if (ep === "search") { const R = rng(p.q); return {items: Array.from({length: 25}, () => ({snippet: {channelId: "UCdemo" + Math.floor(R() * 60)}}))}; }
-    if (ep === "channels") return {items: p.id.split(",").map(cid => { const R = rng(cid); const subs = Math.round(10 ** (3 + R() * 3.3)); return {id: cid, snippet: {title: NAMES[parseInt(cid.slice(6)) % NAMES.length] + " " + cid.slice(6), customUrl: "@canal" + cid.slice(6), publishedAt: new Date(now - (20 + R() * 1500) * 864e5).toISOString(), country: ["BR","US","PT",""][Math.floor(R()*4)], thumbnails: {}}, statistics: {viewCount: String(Math.round(subs * 10 ** (1.5 + R() * 2.3))), subscriberCount: String(subs), videoCount: String(5 + Math.floor(R() * 300))}, contentDetails: {relatedPlaylists: {uploads: "UU" + cid}}}; })};
-    if (ep === "playlistItems") { const R = rng(p.playlistId); return {items: Array.from({length: 3 + Math.floor(R() * 15)}, (_, i) => ({contentDetails: {videoId: p.playlistId + "_" + i, videoPublishedAt: new Date(now - i * (0.5 + R() * 3.5) * 864e5).toISOString()}}))}; }
-    if (ep === "videos") return {items: p.id.split(",").map(id => { const R = rng(id); return {id, snippet: {title: ["O caso que ninguém explica","10 fatos que vão te assustar","A verdade escondida sobre","O que aconteceu naquela noite","Mistério resolvido depois de 40 anos"][Math.floor(R()*5)]}, statistics: {viewCount: String(Math.round(10 ** (3 + R() * 4.3)))}}; })};
+    if (ep === "channels") return {items: p.id.split(",").map(cid => { const R = rng(cid); const subs = Math.round(10 ** (3 + R() * 3.3)); return {id: cid, snippet: {title: NAMES[parseInt(cid.slice(6)) % NAMES.length] + " " + cid.slice(6), customUrl: "@canal" + cid.slice(6), description: R() < 0.5 ? "" : "Histórias reais e mistérios toda semana. Inscreva-se!", publishedAt: new Date(now - (20 + R() * (R() < 0.6 ? 400 : 1500)) * 864e5).toISOString(), country: ["BR","US","PT",""][Math.floor(R()*4)], thumbnails: {}}, statistics: {viewCount: String(Math.round(subs * 10 ** (1.5 + R() * 2.3))), subscriberCount: String(subs), videoCount: String(5 + Math.floor(R() * 300))}, contentDetails: {relatedPlaylists: {uploads: "UU" + cid}}}; })};
+    if (ep === "playlistItems") { const R = rng(p.playlistId); const fast = R() < 0.4, tpl = R() < 0.5; return {items: Array.from({length: 6 + Math.floor(R() * 20)}, (_, i) => ({snippet: {title: demoTitle(R, tpl)}, contentDetails: {videoId: p.playlistId + "_" + i, videoPublishedAt: new Date(now - i * (fast ? 0.3 + R() * 0.5 : 0.5 + R() * 3.5) * 864e5).toISOString()}}))}; }
+    if (ep === "videos") return {items: p.id.split(",").map(id => { const R = rng(id); return {id, snippet: {title: demoTitle(R, true), thumbnails: {}}, statistics: {viewCount: String(Math.round(10 ** (3 + R() * 4.3)))}, contentDetails: {duration: "PT" + (8 + Math.floor(R() * (R() < 0.5 ? 2 : 20))) + "M" + Math.floor(R() * 60) + "S"}}; })};
     return {items: []};
   }
 }
@@ -273,6 +309,7 @@ async function runSearch(p, yt, onProgress) {
   const mode = p.views_mode || "canal";
   const pages = Math.max(1, Math.min(+p.pages || 1, 3));
   const maxAge = +p.max_age || 0;
+  const aiMin = +p.ai_min || 0;
   const now = new Date(), since = new Date(now - days * 864e5);
 
   const chKw = new Map();
@@ -313,12 +350,13 @@ async function runSearch(p, yt, onProgress) {
     onProgress(`Conferindo uploads recentes (${i + 1}/${cands.length})…`);
     const up = c.contentDetails?.relatedPlaylists?.uploads;
     if (!up) continue;
-    const pl = await yt.get("playlistItems", {part: "contentDetails", playlistId: up, maxResults: 50});
-    const recent = (pl.items || []).map(it => it.contentDetails).filter(cd => cd.videoPublishedAt && new Date(cd.videoPublishedAt) >= since);
+    const pl = await yt.get("playlistItems", {part: "snippet,contentDetails", playlistId: up, maxResults: 50});
+    const uploads = (pl.items || []).map(it => ({...it.contentDetails, title: it.snippet?.title || ""})).filter(cd => cd.videoPublishedAt);
+    const recent = uploads.filter(cd => new Date(cd.videoPublishedAt) >= since);
     if (!recent.length) continue;
     const vids = {};
     for (let j = 0; j < recent.length; j += 50) {
-      const vd = await yt.get("videos", {part: "statistics,snippet", id: recent.slice(j, j + 50).map(r => r.videoId).join(",")});
+      const vd = await yt.get("videos", {part: "statistics,snippet,contentDetails", id: recent.slice(j, j + 50).map(r => r.videoId).join(",")});
       (vd.items || []).forEach(v => vids[v.id] = v);
     }
     const vv = id => +(vids[id]?.statistics?.viewCount || 0);
@@ -334,8 +372,16 @@ async function runSearch(p, yt, onProgress) {
       url: "https://www.youtube.com/channel/" + c.id, subs, views_total: total, views_period: periodViews,
       videos_period: recent.length, ratio: Math.round(ratio * 10) / 10, ref_views: ref,
       last_upload: recent.map(r => r.videoPublishedAt).sort().pop(), age_days: age, keywords: chKw.get(c.id) || [],
-      top_video: {title: vids[best]?.snippet?.title || "", views: vv(best), url: "https://www.youtube.com/watch?v=" + best}
+      top_video: {title: vids[best]?.snippet?.title || "", views: vv(best), url: "https://www.youtube.com/watch?v=" + best},
+      description: (sn.description || "").slice(0, 400),
+      recent_videos: recent.slice(0, 12).map(r => { const v = vids[r.videoId] || {}; const th = v.snippet?.thumbnails || {};
+        return {id: r.videoId, title: v.snippet?.title || r.title, views: vv(r.videoId), published: r.videoPublishedAt,
+                duration: isoDur(v.contentDetails?.duration), thumb: (th.medium || th.high || th.default || {}).url || ""}; }),
+      upload_dates: uploads.map(u => u.videoPublishedAt), upload_titles: uploads.map(u => u.title).slice(0, 30), videos_total: +c.statistics.videoCount || 0
     });
+    const last = results[results.length - 1];
+    Object.assign(last, aiHeuristic(last));
+    if (last.ai_score < aiMin) results.pop();
   }
 
   const niches = keywords.map(kw => {
@@ -345,16 +391,120 @@ async function runSearch(p, yt, onProgress) {
             median_ratio: rs.length ? rs[Math.floor(rs.length / 2)] : 0, found: [...chKw.values()].filter(v => v.includes(kw)).length, channels: chs};
   }).sort((a, b) => b.count - a.count || b.views_period_sum - a.views_period_sum);
 
-  return {generated_at: now.toISOString(), params: {days, min_views: minViews, max_subs: maxSubs, min_ratio: minRatio, views_mode: mode},
+  return {generated_at: now.toISOString(), params: {days, min_views: minViews, max_subs: maxSubs, min_ratio: minRatio, views_mode: mode, max_age: maxAge, ai_min: aiMin},
           stats: {found: chKw.size, analyzed: cands.length, matched: results.length, skipped, units: yt.units}, niches, results};
 }
 
+/* ---------------- AI-content heuristic ---------------- */
+function isoDur(s) { const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s || ""); return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0; }
+const AI_PHRASES = ["a verdade sobre","o segredo","ninguém te contou","ninguem te contou","você não vai acreditar","voce nao vai acreditar","o mistério d","o misterio d","a história d","a historia d","desvendad","revelad","chocante","assustador","o que aconteceu","explicad","que ninguém","que ninguem","sombri","perturbador","inexplicáve","the truth about","untold","unveil","secrets of","mysteries of","what happened","you won't believe","explained","dark truth","the history of","the story of","terrifying","disturbing","shocking","hidden","forgotten","ancient","the real reason","nobody talks about","haunting","creepy","bizarre"];
+const norm = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const words = t => new Set(norm(t).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length > 2));
+const cv = a => { if (a.length < 2) return 1; const m = a.reduce((x, y) => x + y, 0) / a.length; if (!m) return 1; return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length) / m; };
+function aiHeuristic(ch) {
+  let score = 0; const why = [];
+  const titles = (ch.upload_titles.length ? ch.upload_titles : ch.recent_videos.map(v => v.title)).filter(Boolean).slice(0, 20);
+  // 1) posting cadence
+  const dates = ch.upload_dates.map(d => new Date(d)).sort((a, b) => b - a);
+  if (dates.length >= 4) {
+    const span = Math.max((dates[0] - dates[dates.length - 1]) / 864e5, 1);
+    const perDay = (dates.length - 1) / span;
+    if (perDay >= 1.5) { score += 25; why.push(`Posta ${perDay.toFixed(1).replace(".", ",")} vídeos por dia`); }
+    else if (perDay >= 0.8) { score += 15; why.push(`Posta quase todo dia (${perDay.toFixed(1).replace(".", ",")}/dia)`); }
+  }
+  if (ch.age_days < 365 && ch.videos_total >= 120) { score += 15; why.push(`${ch.videos_total} vídeos em ${ch.age_days} dias de canal`); }
+  else if (ch.age_days < 365 && ch.videos_total / Math.max(ch.age_days, 1) >= 0.5) { score += 8; why.push(`Muitos vídeos para a idade do canal (${ch.videos_total} em ${ch.age_days} dias)`); }
+  // 2) templated titles
+  if (titles.length >= 4) {
+    const ws = titles.map(words); let sim = 0, n = 0;
+    for (let i = 0; i < ws.length; i++) for (let j = i + 1; j < ws.length; j++) { const a = ws[i], b = ws[j]; const inter = [...a].filter(x => b.has(x)).length; const uni = new Set([...a, ...b]).size || 1; sim += inter / uni; n++; }
+    sim /= Math.max(n, 1);
+    if (sim >= 0.3) { score += 20; why.push("Títulos seguem o mesmo molde"); }
+    else if (sim >= 0.18) { score += 10; why.push("Títulos bem parecidos entre si"); }
+    const starts = {}; titles.forEach(t => { const k = norm(t).split(/\s+/).slice(0, 2).join(" "); starts[k] = (starts[k] || 0) + 1; });
+    const topStart = Math.max(...Object.values(starts));
+    if (topStart / titles.length >= 0.4 && topStart >= 3) { score += 10; why.push(`${topStart} de ${titles.length} títulos começam igual`); }
+    const hits = titles.filter(t => AI_PHRASES.some(p => norm(t).includes(norm(p)))).length;
+    if (hits / titles.length >= 0.5) { score += 15; why.push(`${hits} de ${titles.length} títulos usam frases típicas de roteiro gerado ("a verdade sobre", "the untold story"…)`); }
+    else if (hits / titles.length >= 0.3) { score += 7; why.push("Vários títulos com frases típicas de conteúdo gerado"); }
+    if (cv(titles.map(t => t.length)) < 0.12) { score += 5; why.push("Títulos quase do mesmo tamanho"); }
+  }
+  // 3) uniform durations
+  const durs = ch.recent_videos.map(v => v.duration).filter(d => d > 0);
+  if (durs.length >= 4 && cv(durs) < 0.15) { score += 10; why.push("Vídeos com duração quase idêntica"); }
+  // 4) bare channel
+  if ((ch.description || "").trim().length < 30) { score += 5; why.push("Canal sem descrição"); }
+  score = Math.min(100, score);
+  if (!why.length) why.push("Nenhum sinal forte nos dados públicos");
+  return {ai_score: score, ai_why: why};
+}
+const aiLabel = s => s >= 60 ? ["ai-hi", "Provável IA"] : s >= 35 ? ["ai-mid", "Possível IA"] : ["ai-lo", "Pouco indício"];
+function aiBadge(c) {
+  const cl = claudeResults[c.id];
+  if (cl) return `<span class="ai ai-claude" title="${esc("Claude: " + cl.veredito + "\n• " + cl.motivos.join("\n• "))}">Claude: ${cl.score}% IA</span>`;
+  const [k, l] = aiLabel(c.ai_score);
+  return `<span class="ai ${k}" title="${esc("Pontuação automática " + c.ai_score + "/100\n• " + c.ai_why.join("\n• "))}">${l} · ${c.ai_score}</span>`;
+}
+function thumbs(c, n) {
+  return `<div class="thumbs">` + c.recent_videos.slice(0, n).map(v => v.thumb
+    ? `<a href="https://www.youtube.com/watch?v=${esc(v.id)}" target="_blank" rel="noopener" title="${esc(v.title)}"><img src="${esc(v.thumb)}" alt="" loading="lazy"></a>`
+    : `<span title="${esc(v.title)}"></span>`).join("") + `</div>`;
+}
+
+/* ---------------- optional Claude vision check ---------------- */
+let claudeResults = {};
+try { claudeResults = JSON.parse(load("radar_claude_results") || "{}"); } catch (e) {}
+const CLAUDE_SCHEMA = {type: "object", additionalProperties: false, required: ["score", "veredito", "motivos"],
+  properties: {score: {type: "integer"}, veredito: {type: "string"}, motivos: {type: "array", items: {type: "string"}}}};
+async function claudeAnalyze(id, btn) {
+  const key = $("claude_key").value.trim();
+  if (!key) { $("claudeBox").open = true; $("claude_key").focus(); return; }
+  const c = lastData.results.find(r => r.id === id); if (!c) return;
+  btn.disabled = true; btn.textContent = "Analisando…";
+  const imgs = c.recent_videos.filter(v => v.thumb).slice(0, 4);
+  const content = imgs.map(v => ({type: "image", source: {type: "url", url: v.thumb}}));
+  content.push({type: "text", text:
+`Você ajuda um criador de canais "dark" do YouTube a identificar canais que produzem conteúdo com IA generativa.
+Acima estão as thumbnails mais recentes do canal "${c.title}". Dados do canal:
+- Criado há ${c.age_days} dias, ${c.videos_total} vídeos, ${c.subs} inscritos.
+- Descrição: ${c.description || "(vazia)"}
+- Títulos recentes:
+${c.upload_titles.slice(0, 15).map(t => "  • " + t).join("\n")}
+
+Avalie a probabilidade (0 a 100) de as thumbnails e os títulos terem sido feitos com IA generativa (imagens tipo Midjourney/DALL-E/Flux, roteiros e títulos em série gerados por LLM, narração sintética típica). Considere sinais visuais (mãos e rostos estranhos, texto deformado, iluminação e estilo "pintura digital" idênticos, composição repetida) e sinais nos títulos. Responda em português do Brasil: "veredito" com uma frase curta e "motivos" com 2 a 4 itens curtos e concretos.`});
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST",
+      headers: {"content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01",
+                "anthropic-beta": "server-side-fallback-2026-07-01", "anthropic-dangerous-direct-browser-access": "true"},
+      body: JSON.stringify({model: "claude-opus-5-5", max_tokens: 4000, fallbacks: "default",
+        output_config: {effort: "low", format: {type: "json_schema", schema: CLAUDE_SCHEMA}},
+        messages: [{role: "user", content}]})});
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const msg = data.error?.message || r.statusText;
+      if (r.status === 401) throw new Error("Chave da Anthropic inválida.");
+      if (r.status === 429) throw new Error("Limite de uso da API da Anthropic atingido. Espere um pouco e tente de novo.");
+      if (/credit|billing|balance/i.test(msg)) throw new Error("Sua conta da Anthropic está sem créditos. Adicione créditos em console.anthropic.com.");
+      throw new Error("Erro da API da Anthropic: " + msg);
+    }
+    if (data.stop_reason === "refusal") throw new Error("O Claude recusou analisar este canal.");
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+    const out = JSON.parse(text);
+    claudeResults[id] = {score: Math.max(0, Math.min(100, out.score | 0)), veredito: out.veredito, motivos: out.motivos || [], t: Date.now()};
+    store("radar_claude_results", JSON.stringify(claudeResults));
+    keepOpen(render);
+  } catch (e) { btn.disabled = false; btn.textContent = "Tentar de novo"; btn.title = e.message; alertBox(e.message); }
+}
+function alertBox(msg) { const el = document.createElement("div"); el.className = "error"; el.textContent = msg; $("out").prepend(el); el.scrollIntoView({behavior: "smooth", block: "center"}); setTimeout(() => el.remove(), 9000); }
+function claudeBtn(c) { return claudeResults[c.id] ? "" : `<button type="button" class="mini-btn" onclick="claudeAnalyze('${esc(c.id)}', this)">Analisar com Claude</button>`; }
+function keepOpen(fn) { const open = [...document.querySelectorAll(".niche:not(.closed)")].map(n => n.dataset.k); const y = window.scrollY; fn(); document.querySelectorAll(".niche").forEach(n => n.classList.toggle("closed", !open.includes(n.dataset.k))); window.scrollTo(0, y); }
+
 /* ---------------- cache ---------------- */
-function cacheKey(p) { return "radar_cache_" + JSON.stringify(p); }
+function cacheKey(p) { return "radar_cache2_" + JSON.stringify(p); }
 function cacheGet(p) { try { const it = JSON.parse(load(cacheKey(p))); if (it && Date.now() - it.t < CACHE_HOURS * 36e5) return it.v; } catch (e) {} return null; }
 function cacheSet(p, v) {
   try {
-    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith("radar_cache_")) { try { if (Date.now() - JSON.parse(localStorage.getItem(k)).t > CACHE_HOURS * 36e5) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); } } }
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith("radar_cache_") || k.startsWith("radar_cache2_"))) { try { if (Date.now() - JSON.parse(localStorage.getItem(k)).t > CACHE_HOURS * 36e5) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); } } }
     localStorage.setItem(cacheKey(p), JSON.stringify({t: Date.now(), v}));
   } catch (e) {}
 }
@@ -362,7 +512,7 @@ function cacheSet(p, v) {
 /* ---------------- actions ---------------- */
 async function execute(demo) {
   const p = readParams();
-  store("radar_form", JSON.stringify(p));
+  store("radar_form_v2", JSON.stringify(p));
   const key = $("api_key").value.trim();
   if (!demo && !key) { showError("Cole sua chave da API do YouTube no primeiro campo. Clique em “Como pegar a chave da API” no topo para ver o passo a passo."); return; }
   store("radar_key", $("remember").checked && key ? key : null);
@@ -410,10 +560,11 @@ function render() {
     <div class="stat"><div class="v">${s.matched}</div><div class="l">canais no filtro</div></div>
     <div class="stat"><div class="v">${withRes.length}/${d.niches.length}</div><div class="l">nichos com resultado</div></div>
     <div class="stat"><div class="v">${fmt(d.results.reduce((a, r) => a + r.views_period, 0))}</div><div class="l">views nos últimos ${p.days} dias</div></div>
+    <div class="stat"><div class="v">${d.results.filter(r => r.ai_score >= 35).length}</div><div class="l">com indício de IA</div></div>
     <div class="stat"><div class="v">${s.found}</div><div class="l">canais vasculhados</div></div>
     <div class="stat"><div class="v">${d.from_cache ? "0" : s.units.toLocaleString("pt-BR")}</div><div class="l">${d.from_cache ? "cota gasta (cache)" : "unidades de cota gastas"}</div></div>
   </div>
-  <div class="toolbar"><span class="grow hint">Filtro: postou nos últimos <b>${p.days}</b> dias · ≥ <b>${fmt(p.min_views)}</b> ${modeTxt} · ≤ <b>${fmt(p.max_subs)}</b> inscritos${p.min_ratio ? ` · ≥ ${p.min_ratio} views/inscrito` : ""}${s.skipped ? ` · ${s.skipped} canais não analisados (limite)` : ""}</span>
+  <div class="toolbar"><span class="grow hint">Filtro: postou nos últimos <b>${p.days}</b> dias${p.max_age ? ` · canal com até <b>${p.max_age >= 365 ? (p.max_age / 365) + (p.max_age >= 730 ? " anos" : " ano") : Math.round(p.max_age / 30) + " meses"}</b>` : ""} · ≥ <b>${fmt(p.min_views)}</b> ${modeTxt} · ≤ <b>${fmt(p.max_subs)}</b> inscritos${p.min_ratio ? ` · ≥ ${p.min_ratio} views/inscrito` : ""}${s.skipped ? ` · ${s.skipped} canais não analisados (limite)` : ""}</span>
   <button type="button" onclick="exportCSV()">Copiar tabela (CSV)</button></div>`;
 
   if (!s.matched) {
@@ -432,7 +583,10 @@ function render() {
   h += `<div class="section-t">Destaques: maior relação views/inscrito</div><div class="top">` + top.map(c => `
     <div class="tc"><div class="h">${c.thumb ? `<img src="${esc(c.thumb)}" alt="" loading="lazy">` : `<img alt="">`}<div><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a><div class="k">${esc(c.keywords[0])}${c.age_days <= 90 ? ' <span class="new">novo</span>' : ""}</div></div></div>
     <div class="big">${c.ratio.toLocaleString("pt-BR")} <span class="k">views/inscrito</span></div>
-    <div class="mini"><span>Inscritos <b>${fmt(c.subs)}</b></span><span>Views <b>${fmt(c.views_total)}</b></span><span>Último <b>${ago(c.last_upload)}</b></span></div>
+    <div class="mini"><span>Inscritos <b>${fmt(c.subs)}</b></span><span>Views <b>${fmt(c.views_total)}</b></span><span>Criado <b>${c.age_days < 365 ? Math.max(1, Math.round(c.age_days / 30)) + " m" : (c.age_days / 365).toFixed(1).replace(".", ",") + " a"} atrás</b></span></div>
+    ${thumbs(c, 4)}
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${aiBadge(c)} ${claudeBtn(c)}</div>
+    ${claudeResults[c.id] ? `<ul class="why"><li>${esc(claudeResults[c.id].veredito)}</li>${claudeResults[c.id].motivos.map(m => `<li>${esc(m)}</li>`).join("")}</ul>` : `<ul class="why">${c.ai_why.slice(0, 3).map(m => `<li>${esc(m)}</li>`).join("")}</ul>`}
     <a class="vid" href="${esc(c.top_video.url)}" target="_blank" rel="noopener" title="${esc(c.top_video.title)}">▶ ${fmt(c.top_video.views)} · ${esc(c.top_video.title)}</a></div>`).join("") + `</div>`;
 
   // niche tables
@@ -480,7 +634,7 @@ function bindScatter() {
 }
 function openNiche(k) { const el = document.querySelector(`.niche[data-k="${k}"]`); if (el) { el.classList.remove("closed"); el.scrollIntoView({behavior: "smooth", block: "start"}); } }
 
-const COLS = [["title","Canal"],["subs","Inscritos",1],["views_total","Views totais",1],["views_period","Views no período",1],["ratio","Views/inscrito",1],["videos_period","Vídeos no período",1],["last_upload","Último vídeo"],["age_days","Idade do canal",1],["top","Vídeo mais visto no período"]];
+const COLS = [["title","Canal"],["subs","Inscritos",1],["views_total","Views totais",1],["views_period","Views no período",1],["ratio","Views/inscrito",1],["videos_period","Vídeos no período",1],["last_upload","Último vídeo"],["age_days","Idade do canal",1],["ai_score","Indício de IA",1],["thumbs","Thumbnails recentes"],["top","Vídeo mais visto no período"]];
 function table(chs) {
   const {key: k, dir} = sortState;
   chs = [...chs].sort((a, b) => (a[k] > b[k] ? 1 : a[k] < b[k] ? -1 : 0) * dir);
@@ -491,12 +645,13 @@ function table(chs) {
       <td class="num">${fmt(c.subs)}</td><td class="num">${fmt(c.views_total)}</td><td class="num">${fmt(c.views_period)}</td>
       <td class="num ratio ${rc}">${c.ratio.toLocaleString("pt-BR")}</td><td class="num">${c.videos_period}</td><td>${ago(c.last_upload)}</td>
       <td class="num">${c.age_days < 365 ? c.age_days + " d" : (c.age_days / 365).toFixed(1).replace(".", ",") + " anos"}${c.age_days <= 90 ? '<span class="new">novo</span>' : ""}</td>
+      <td class="num">${aiBadge(c)}<div style="margin-top:4px">${claudeBtn(c)}</div></td><td>${thumbs(c, 3)}</td>
       <td><a class="vid" href="${esc(c.top_video.url)}" target="_blank" rel="noopener" title="${esc(c.top_video.title)}">${fmt(c.top_video.views)} · ${esc(c.top_video.title)}</a></td></tr>`;
   });
   return h + "</table>";
 }
 function sortBy(key) {
-  if (key === "top") return;
+  if (key === "top" || key === "thumbs") return;
   sortState = {key, dir: sortState.key === key ? -sortState.dir : -1};
   const open = [...document.querySelectorAll(".niche:not(.closed)")].map(n => n.dataset.k);
   render();
@@ -504,8 +659,8 @@ function sortBy(key) {
 }
 async function exportCSV() {
   if (!lastData) return;
-  const rows = [["nicho","canal","handle","url","pais","inscritos","views_totais","views_periodo","views_por_inscrito","videos_periodo","ultimo_video","idade_dias","video_top","views_video_top","url_video_top"]];
-  lastData.niches.forEach(n => n.channels.forEach(c => rows.push([n.keyword,c.title,c.handle,c.url,c.country,c.subs,c.views_total,c.views_period,String(c.ratio).replace(".", ","),c.videos_period,c.last_upload,c.age_days,c.top_video.title,c.top_video.views,c.top_video.url])));
+  const rows = [["nicho","canal","handle","url","pais","inscritos","views_totais","views_periodo","views_por_inscrito","videos_periodo","ultimo_video","idade_dias","video_top","views_video_top","url_video_top","indicio_ia","motivos_ia"]];
+  lastData.niches.forEach(n => n.channels.forEach(c => rows.push([n.keyword,c.title,c.handle,c.url,c.country,c.subs,c.views_total,c.views_period,String(c.ratio).replace(".", ","),c.videos_period,c.last_upload,c.age_days,c.top_video.title,c.top_video.views,c.top_video.url,claudeResults[c.id] ? claudeResults[c.id].score : c.ai_score,(claudeResults[c.id] ? [claudeResults[c.id].veredito, ...claudeResults[c.id].motivos] : c.ai_why).join(" | ")])));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
   // try a download first (works on normal sites), fall back to clipboard
   try {
