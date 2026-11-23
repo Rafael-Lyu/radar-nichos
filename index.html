@@ -109,6 +109,7 @@
   .ai-hi{color:#ff8a5c;border-color:#ff8a5c;background:#ff8a5c1a}
   .ai-mid{color:var(--warn);border-color:var(--warn);background:#ffb0201a}
   .ai-lo{color:var(--muted);border-color:var(--line)}
+  .ai-anim{color:#5bc8ff;border-color:#5bc8ff;background:#5bc8ff1a}
   .ai-claude{color:#c9a7ff;border-color:#c9a7ff;background:#c9a7ff1a}
   .thumbs{display:flex;gap:4px}
   .thumbs a,.thumbs span{display:block;width:64px;height:36px;border-radius:4px;overflow:hidden;background:var(--panel2);flex:none}
@@ -155,6 +156,12 @@
       <button type="button" data-v="90">3 meses</button><button type="button" data-v="180">6 meses</button><button type="button" data-v="365">1 ano</button><button type="button" data-v="730">2 anos</button><button type="button" data-v="0">Tanto faz</button>
     </div>
     <input type="hidden" id="max_age" value="365">
+    <label for="format">Tipo de canal</label>
+    <select id="format">
+      <option value="any">Qualquer</option>
+      <option value="anim">Só animação</option>
+      <option value="real">Sem animação</option>
+    </select>
     <label for="views_mode">As views mínimas contam…</label>
     <select id="views_mode">
       <option value="canal">Total do canal (desde a criação)</option>
@@ -202,8 +209,8 @@
 "use strict";
 const API = "https://www.googleapis.com/youtube/v3/";
 const CACHE_HOURS = 6, MAX_DEEP = 200;
-const PRESETS = ["curiosidades","mistérios não resolvidos","histórias reais","true crime","histórias de terror","fatos assustadores","história antiga","conspirações","motivação","finanças","biografia","espaço universo","guerras","reddit stories","horror stories","unsolved mysteries","stoicism","dark history"];
-const FIELDS = ["keywords","days","min_views","views_mode","max_subs","min_ratio","region","language","duration","max_age","ai_min","pages"];
+const PRESETS = ["e se","what if","histórias animadas","animação curiosidades","curiosidades","mistérios não resolvidos","histórias reais","true crime","histórias de terror","fatos assustadores","história antiga","conspirações","motivação","finanças","biografia","espaço universo","guerras","reddit stories","horror stories","unsolved mysteries","stoicism","dark history"];
+const FIELDS = ["keywords","days","min_views","views_mode","max_subs","min_ratio","region","language","duration","max_age","format","ai_min","pages"];
 const $ = id => document.getElementById(id);
 let lastData = null, sortState = {key:"ratio", dir:-1};
 
@@ -291,7 +298,7 @@ class DemoYT extends YT {
     if (ep === "search") { const R = rng(p.q); return {items: Array.from({length: 25}, () => ({snippet: {channelId: "UCdemo" + Math.floor(R() * 60)}}))}; }
     if (ep === "channels") return {items: p.id.split(",").map(cid => { const R = rng(cid); const subs = Math.round(10 ** (3 + R() * 3.3)); return {id: cid, snippet: {title: NAMES[parseInt(cid.slice(6)) % NAMES.length] + " " + cid.slice(6), customUrl: "@canal" + cid.slice(6), description: R() < 0.5 ? "" : "Histórias reais e mistérios toda semana. Inscreva-se!", publishedAt: new Date(now - (20 + R() * (R() < 0.6 ? 400 : 1500)) * 864e5).toISOString(), country: ["BR","US","PT",""][Math.floor(R()*4)], thumbnails: {}}, statistics: {viewCount: String(Math.round(subs * 10 ** (1.5 + R() * 2.3))), subscriberCount: String(subs), videoCount: String(5 + Math.floor(R() * 300))}, contentDetails: {relatedPlaylists: {uploads: "UU" + cid}}}; })};
     if (ep === "playlistItems") { const R = rng(p.playlistId); const fast = R() < 0.4, tpl = R() < 0.5; return {items: Array.from({length: 6 + Math.floor(R() * 20)}, (_, i) => ({snippet: {title: demoTitle(R, tpl)}, contentDetails: {videoId: p.playlistId + "_" + i, videoPublishedAt: new Date(now - i * (fast ? 0.3 + R() * 0.5 : 0.5 + R() * 3.5) * 864e5).toISOString()}}))}; }
-    if (ep === "videos") return {items: p.id.split(",").map(id => { const R = rng(id); return {id, snippet: {title: demoTitle(R, true), thumbnails: {}}, statistics: {viewCount: String(Math.round(10 ** (3 + R() * 4.3)))}, contentDetails: {duration: "PT" + (8 + Math.floor(R() * (R() < 0.5 ? 2 : 20))) + "M" + Math.floor(R() * 60) + "S"}}; })};
+    if (ep === "videos") return {items: p.id.split(",").map(id => { const R = rng(id); return {id, snippet: {title: demoTitle(R, true), thumbnails: {}, categoryId: R() < 0.35 ? "1" : "24", tags: R() < 0.3 ? ["animação", "e se"] : ["curiosidades"]}, statistics: {viewCount: String(Math.round(10 ** (3 + R() * 4.3)))}, contentDetails: {duration: "PT" + (8 + Math.floor(R() * (R() < 0.5 ? 2 : 20))) + "M" + Math.floor(R() * 60) + "S"}}; })};
     return {items: []};
   }
 }
@@ -310,6 +317,7 @@ async function runSearch(p, yt, onProgress) {
   const pages = Math.max(1, Math.min(+p.pages || 1, 3));
   const maxAge = +p.max_age || 0;
   const aiMin = +p.ai_min || 0;
+  const format = p.format || "any";
   const now = new Date(), since = new Date(now - days * 864e5);
 
   const chKw = new Map();
@@ -326,7 +334,7 @@ async function runSearch(p, yt, onProgress) {
   onProgress(`Lendo estatísticas de ${chKw.size} canais…`);
   const ids = [...chKw.keys()], channels = [];
   for (let i = 0; i < ids.length; i += 50) {
-    const d = await yt.get("channels", {part: "snippet,statistics,contentDetails", id: ids.slice(i, i + 50).join(","), maxResults: 50});
+    const d = await yt.get("channels", {part: "snippet,statistics,contentDetails,brandingSettings", id: ids.slice(i, i + 50).join(","), maxResults: 50});
     channels.push(...(d.items || []));
   }
 
@@ -381,7 +389,8 @@ async function runSearch(p, yt, onProgress) {
     });
     const last = results[results.length - 1];
     Object.assign(last, aiHeuristic(last));
-    if (last.ai_score < aiMin) results.pop();
+    Object.assign(last, animDetect(last, c, Object.values(vids)));
+    if (last.ai_score < aiMin || (format === "anim" && !last.anim) || (format === "real" && last.anim)) results.pop();
   }
 
   const niches = keywords.map(kw => {
@@ -391,7 +400,7 @@ async function runSearch(p, yt, onProgress) {
             median_ratio: rs.length ? rs[Math.floor(rs.length / 2)] : 0, found: [...chKw.values()].filter(v => v.includes(kw)).length, channels: chs};
   }).sort((a, b) => b.count - a.count || b.views_period_sum - a.views_period_sum);
 
-  return {generated_at: now.toISOString(), params: {days, min_views: minViews, max_subs: maxSubs, min_ratio: minRatio, views_mode: mode, max_age: maxAge, ai_min: aiMin},
+  return {generated_at: now.toISOString(), params: {days, min_views: minViews, max_subs: maxSubs, min_ratio: minRatio, views_mode: mode, max_age: maxAge, ai_min: aiMin, format},
           stats: {found: chKw.size, analyzed: cands.length, matched: results.length, skipped, units: yt.units}, niches, results};
 }
 
@@ -439,6 +448,23 @@ function aiHeuristic(ch) {
   return {ai_score: score, ai_why: why};
 }
 const aiLabel = s => s >= 60 ? ["ai-hi", "Provável IA"] : s >= 35 ? ["ai-mid", "Possível IA"] : ["ai-lo", "Pouco indício"];
+/* ---------------- animation detection ---------------- */
+const ANIM_WORDS = ["animacao","animacoes","animado","animada","animados","animadas","animation","animated","animations","cartoon","desenho animado","desenhos","2d","3d","stickman","boneco palito","bonecos palito","motion graphics","whiteboard","anime","toon","ilustrad","illustrated","animatic"];
+const hasAnim = t => { const n = " " + norm(t || "").replace(/[^a-z0-9 ]/g, " ") + " "; return ANIM_WORDS.some(w => n.includes(" " + w) ); };
+function animDetect(ch, c, vids) {
+  let score = 0; const why = [];
+  const cats = vids.map(v => v.snippet?.categoryId).filter(Boolean);
+  const share1 = cats.length ? cats.filter(x => x === "1").length / cats.length : 0;
+  if (share1 >= 0.5) { score += 50; why.push("Vídeos na categoria Filmes e Animação"); }
+  const chText = [c.snippet?.title, c.snippet?.description, c.brandingSettings?.channel?.keywords].join(" ");
+  if (hasAnim(chText)) { score += 45; why.push("Nome, descrição ou palavras-chave do canal falam de animação"); }
+  const vidTexts = vids.map(v => [v.snippet?.title, (v.snippet?.tags || []).join(" ")].join(" "));
+  const hits = vidTexts.filter(hasAnim).length;
+  if (vidTexts.length && hits / vidTexts.length >= 0.25) { score += 35; why.push(`${hits} de ${vidTexts.length} vídeos com tags ou títulos de animação`); }
+  return {anim: score >= 40, anim_why: why};
+}
+const animBadge = c => c.anim ? `<span class="ai ai-anim" title="${esc(c.anim_why.join("\n"))}">Animação</span>` : "";
+
 function aiBadge(c) {
   const cl = claudeResults[c.id];
   if (cl) return `<span class="ai ai-claude" title="${esc("Claude: " + cl.veredito + "\n• " + cl.motivos.join("\n• "))}">Claude: ${cl.score}% IA</span>`;
@@ -561,10 +587,11 @@ function render() {
     <div class="stat"><div class="v">${withRes.length}/${d.niches.length}</div><div class="l">nichos com resultado</div></div>
     <div class="stat"><div class="v">${fmt(d.results.reduce((a, r) => a + r.views_period, 0))}</div><div class="l">views nos últimos ${p.days} dias</div></div>
     <div class="stat"><div class="v">${d.results.filter(r => r.ai_score >= 35).length}</div><div class="l">com indício de IA</div></div>
+    <div class="stat"><div class="v">${d.results.filter(r => r.anim).length}</div><div class="l">canais de animação</div></div>
     <div class="stat"><div class="v">${s.found}</div><div class="l">canais vasculhados</div></div>
     <div class="stat"><div class="v">${d.from_cache ? "0" : s.units.toLocaleString("pt-BR")}</div><div class="l">${d.from_cache ? "cota gasta (cache)" : "unidades de cota gastas"}</div></div>
   </div>
-  <div class="toolbar"><span class="grow hint">Filtro: postou nos últimos <b>${p.days}</b> dias${p.max_age ? ` · canal com até <b>${p.max_age >= 365 ? (p.max_age / 365) + (p.max_age >= 730 ? " anos" : " ano") : Math.round(p.max_age / 30) + " meses"}</b>` : ""} · ≥ <b>${fmt(p.min_views)}</b> ${modeTxt} · ≤ <b>${fmt(p.max_subs)}</b> inscritos${p.min_ratio ? ` · ≥ ${p.min_ratio} views/inscrito` : ""}${s.skipped ? ` · ${s.skipped} canais não analisados (limite)` : ""}</span>
+  <div class="toolbar"><span class="grow hint">Filtro: postou nos últimos <b>${p.days}</b> dias${p.format === "anim" ? " · <b>só animação</b>" : p.format === "real" ? " · <b>sem animação</b>" : ""}${p.max_age ? ` · canal com até <b>${p.max_age >= 365 ? (p.max_age / 365) + (p.max_age >= 730 ? " anos" : " ano") : Math.round(p.max_age / 30) + " meses"}</b>` : ""} · ≥ <b>${fmt(p.min_views)}</b> ${modeTxt} · ≤ <b>${fmt(p.max_subs)}</b> inscritos${p.min_ratio ? ` · ≥ ${p.min_ratio} views/inscrito` : ""}${s.skipped ? ` · ${s.skipped} canais não analisados (limite)` : ""}</span>
   <button type="button" onclick="exportCSV()">Copiar tabela (CSV)</button></div>`;
 
   if (!s.matched) {
@@ -585,7 +612,7 @@ function render() {
     <div class="big">${c.ratio.toLocaleString("pt-BR")} <span class="k">views/inscrito</span></div>
     <div class="mini"><span>Inscritos <b>${fmt(c.subs)}</b></span><span>Views <b>${fmt(c.views_total)}</b></span><span>Criado <b>${c.age_days < 365 ? Math.max(1, Math.round(c.age_days / 30)) + " m" : (c.age_days / 365).toFixed(1).replace(".", ",") + " a"} atrás</b></span></div>
     ${thumbs(c, 4)}
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${aiBadge(c)} ${claudeBtn(c)}</div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${animBadge(c)} ${aiBadge(c)} ${claudeBtn(c)}</div>
     ${claudeResults[c.id] ? `<ul class="why"><li>${esc(claudeResults[c.id].veredito)}</li>${claudeResults[c.id].motivos.map(m => `<li>${esc(m)}</li>`).join("")}</ul>` : `<ul class="why">${c.ai_why.slice(0, 3).map(m => `<li>${esc(m)}</li>`).join("")}</ul>`}
     <a class="vid" href="${esc(c.top_video.url)}" target="_blank" rel="noopener" title="${esc(c.top_video.title)}">▶ ${fmt(c.top_video.views)} · ${esc(c.top_video.title)}</a></div>`).join("") + `</div>`;
 
@@ -641,7 +668,7 @@ function table(chs) {
   let h = "<table><tr>" + COLS.map(([key, l, num]) => `<th class="${num ? "num" : ""}" onclick="sortBy('${key}')">${l}${k === key ? (dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr>";
   chs.forEach(c => {
     const rc = c.ratio >= 1000 ? "r-hi" : c.ratio >= 200 ? "r-mid" : "";
-    h += `<tr><td><div class="ch">${c.thumb ? `<img src="${esc(c.thumb)}" loading="lazy" alt="">` : `<img alt="">`}<div><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a><small>${esc(c.handle)}${c.country ? " · " + esc(c.country) : ""} · ${c.keywords.map(esc).join(", ")}</small></div></div></td>
+    h += `<tr><td><div class="ch">${c.thumb ? `<img src="${esc(c.thumb)}" loading="lazy" alt="">` : `<img alt="">`}<div><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a><small>${esc(c.handle)}${c.country ? " · " + esc(c.country) : ""} · ${c.keywords.map(esc).join(", ")}</small>${c.anim ? `<div style="margin-top:3px">${animBadge(c)}</div>` : ""}</div></div></td>
       <td class="num">${fmt(c.subs)}</td><td class="num">${fmt(c.views_total)}</td><td class="num">${fmt(c.views_period)}</td>
       <td class="num ratio ${rc}">${c.ratio.toLocaleString("pt-BR")}</td><td class="num">${c.videos_period}</td><td>${ago(c.last_upload)}</td>
       <td class="num">${c.age_days < 365 ? c.age_days + " d" : (c.age_days / 365).toFixed(1).replace(".", ",") + " anos"}${c.age_days <= 90 ? '<span class="new">novo</span>' : ""}</td>
@@ -659,8 +686,8 @@ function sortBy(key) {
 }
 async function exportCSV() {
   if (!lastData) return;
-  const rows = [["nicho","canal","handle","url","pais","inscritos","views_totais","views_periodo","views_por_inscrito","videos_periodo","ultimo_video","idade_dias","video_top","views_video_top","url_video_top","indicio_ia","motivos_ia"]];
-  lastData.niches.forEach(n => n.channels.forEach(c => rows.push([n.keyword,c.title,c.handle,c.url,c.country,c.subs,c.views_total,c.views_period,String(c.ratio).replace(".", ","),c.videos_period,c.last_upload,c.age_days,c.top_video.title,c.top_video.views,c.top_video.url,claudeResults[c.id] ? claudeResults[c.id].score : c.ai_score,(claudeResults[c.id] ? [claudeResults[c.id].veredito, ...claudeResults[c.id].motivos] : c.ai_why).join(" | ")])));
+  const rows = [["nicho","canal","handle","url","pais","inscritos","views_totais","views_periodo","views_por_inscrito","videos_periodo","ultimo_video","idade_dias","video_top","views_video_top","url_video_top","indicio_ia","motivos_ia","animacao"]];
+  lastData.niches.forEach(n => n.channels.forEach(c => rows.push([n.keyword,c.title,c.handle,c.url,c.country,c.subs,c.views_total,c.views_period,String(c.ratio).replace(".", ","),c.videos_period,c.last_upload,c.age_days,c.top_video.title,c.top_video.views,c.top_video.url,claudeResults[c.id] ? claudeResults[c.id].score : c.ai_score,(claudeResults[c.id] ? [claudeResults[c.id].veredito, ...claudeResults[c.id].motivos] : c.ai_why).join(" | "),c.anim ? "sim" : "nao"])));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
   // try a download first (works on normal sites), fall back to clipboard
   try {
