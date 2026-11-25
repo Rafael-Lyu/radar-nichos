@@ -121,6 +121,38 @@
   .seg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
   .seg button{font-size:12px;padding:7px 2px}
   .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .seg3{grid-template-columns:repeat(3,1fr)}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;margin-bottom:12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:4;scrollbar-width:thin}
+  .tab{flex:none;display:flex;align-items:center;gap:6px;border-radius:99px;padding:7px 14px;font-size:13px;white-space:nowrap}
+  .tab .n{font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:99px;padding:0 7px}
+  .tab.zero{color:var(--muted)} .tab.zero .n{background:var(--line);color:var(--muted)}
+  .tab.on{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
+  .nh{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+  .nh h2{margin:0;font-size:20px}
+  .nh .m{font-size:12px;color:var(--muted)} .nh .m b{color:var(--text)}
+  .nh select{width:auto;margin-left:auto}
+  .crow{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+  @media(max-width:1100px){.crow{grid-template-columns:minmax(0,1fr)}}
+  .crow .h{display:flex;gap:10px;align-items:center}
+  .crow .h img{width:44px;height:44px;border-radius:50%;background:var(--panel2);flex:none;object-fit:cover}
+  .crow .h a{color:var(--text);text-decoration:none;font-weight:700;font-size:15px}
+  .crow .h a:hover{color:var(--accent)}
+  .crow .k{font-size:11px;color:var(--muted)}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 10px}
+  .metrics div{font-size:11px;color:var(--muted)} .metrics b{display:block;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
+  .metrics b.r-hi{color:var(--good)} .metrics b.r-mid{color:var(--warn)}
+  .badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .top3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  @media(max-width:600px){.top3{gap:6px}.v3 .t{font-size:11px}.v3 .im .d,.v3 .im .rk{font-size:10px}}
+  .v3{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:var(--text);min-width:0}
+  .v3 .im{position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:var(--panel2)}
+  .v3 .im img{width:100%;height:100%;object-fit:cover;display:block}
+  .v3 .im .d{position:absolute;right:5px;bottom:5px;background:#000c;color:#fff;font-size:11px;padding:1px 5px;border-radius:4px}
+  .v3 .im .rk{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px}
+  .v3 .t{font-size:12px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .v3 .s{font-size:11px;color:var(--muted)}
+  .v3:hover .t{color:var(--accent)}
+  .ai-fmt{color:var(--text);border-color:var(--line);background:var(--panel2)}
   .help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:14px}
   .help h3{margin:0 0 8px}
   .help ol{margin:0;padding-left:20px;color:var(--muted)}
@@ -156,6 +188,11 @@
       <button type="button" data-v="90">3 meses</button><button type="button" data-v="180">6 meses</button><button type="button" data-v="365">1 ano</button><button type="button" data-v="730">2 anos</button><button type="button" data-v="0">Tanto faz</button>
     </div>
     <input type="hidden" id="max_age" value="365">
+    <label>Formato dos vídeos</label>
+    <div class="seg seg3" id="durSeg">
+      <button type="button" data-v="any">Todos</button><button type="button" data-v="shorts">Só Shorts</button><button type="button" data-v="long">Vídeos 4 min+</button>
+    </div>
+    <input type="hidden" id="duration" value="any">
     <label for="format">Tipo de canal</label>
     <select id="format">
       <option value="any">Qualquer</option>
@@ -180,12 +217,8 @@
         <div><label for="language">Idioma</label>
           <select id="language"><option value="">Qualquer</option><option value="pt">Português</option><option value="en">Inglês</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="de">Alemão</option></select></div>
       </div>
-      <div class="row">
-        <div><label for="duration">Duração do vídeo</label>
-          <select id="duration"><option value="any">Qualquer</option><option value="short">Curto (&lt;4 min / Shorts)</option><option value="medium">Médio (4–20 min)</option><option value="long">Longo (&gt;20 min)</option></select></div>
-        <div><label for="ai_min">Indício de IA</label>
-          <select id="ai_min"><option value="0">Mostrar todos</option><option value="35">Só possível ou provável IA</option><option value="60">Só provável IA</option></select></div>
-      </div>
+      <label for="ai_min">Indício de IA</label>
+      <select id="ai_min"><option value="0">Mostrar todos</option><option value="35">Só possível ou provável IA</option><option value="60">Só provável IA</option></select>
       <label for="pages">Profundidade da busca</label>
       <select id="pages"><option value="1">1 página por nicho (50 vídeos)</option><option value="2">2 páginas (100 vídeos)</option><option value="3">3 páginas (150 vídeos)</option></select>
       <label class="check"><input type="checkbox" id="use_cache" checked> Reaproveitar resultados das últimas 6h</label>
@@ -239,7 +272,7 @@ PRESETS.forEach(p => {
   c.onclick = () => { const t = $("keywords"); const l = t.value.split("\n").map(s => s.trim()).filter(Boolean); if (!l.includes(p)) l.push(p); t.value = l.join("\n"); updateQuota(); };
   $("presets").appendChild(c);
 });
-try { const saved = JSON.parse(load("radar_form_v2") || "{}"); FIELDS.forEach(f => { if (saved[f] != null) $(f).value = saved[f]; }); } catch (e) {}
+try { const saved = JSON.parse(load("radar_form_v3") || "{}"); FIELDS.forEach(f => { if (saved[f] != null) $(f).value = saved[f]; }); } catch (e) {}
 if (!$("keywords").value) $("keywords").value = "curiosidades\nhistórias de terror\nmistérios não resolvidos\ntrue crime";
 if (load("radar_key")) $("api_key").value = load("radar_key");
 if (load("radar_claude_key")) $("claude_key").value = load("radar_claude_key");
@@ -247,10 +280,12 @@ $("claude_key").addEventListener("change", () => { store("radar_claude_key", $("
 function syncAge() { document.querySelectorAll("#ageSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === $("max_age").value)); }
 document.querySelectorAll("#ageSeg button").forEach(b => b.onclick = () => { $("max_age").value = b.dataset.v; syncAge(); });
 syncAge();
+function syncDur() { document.querySelectorAll("#durSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === $("duration").value)); updateQuota(); }
+document.querySelectorAll("#durSeg button").forEach(b => b.onclick = () => { $("duration").value = b.dataset.v; syncDur(); });
 
 function updateQuota() {
   const n = $("keywords").value.split(/[\n,]/).map(s => s.trim()).filter(Boolean).length;
-  const search = n * (+$("pages").value) * 100;
+  const search = n * (+$("pages").value) * 100 * ($("duration").value === "long" ? 2 : 1);
   const max = Math.round(search * 1.6);
   $("quota").innerHTML = `Custo estimado: <b>~${search.toLocaleString("pt-BR")}–${max.toLocaleString("pt-BR")}</b> unidades<br>Cota grátis: 10.000/dia → cerca de <b>${Math.max(1, Math.floor(10000 / Math.max(max, 1)))}</b> buscas assim por dia.`;
 }
@@ -298,7 +333,7 @@ class DemoYT extends YT {
     if (ep === "search") { const R = rng(p.q); return {items: Array.from({length: 25}, () => ({snippet: {channelId: "UCdemo" + Math.floor(R() * 60)}}))}; }
     if (ep === "channels") return {items: p.id.split(",").map(cid => { const R = rng(cid); const subs = Math.round(10 ** (3 + R() * 3.3)); return {id: cid, snippet: {title: NAMES[parseInt(cid.slice(6)) % NAMES.length] + " " + cid.slice(6), customUrl: "@canal" + cid.slice(6), description: R() < 0.5 ? "" : "Histórias reais e mistérios toda semana. Inscreva-se!", publishedAt: new Date(now - (20 + R() * (R() < 0.6 ? 400 : 1500)) * 864e5).toISOString(), country: ["BR","US","PT",""][Math.floor(R()*4)], thumbnails: {}}, statistics: {viewCount: String(Math.round(subs * 10 ** (1.5 + R() * 2.3))), subscriberCount: String(subs), videoCount: String(5 + Math.floor(R() * 300))}, contentDetails: {relatedPlaylists: {uploads: "UU" + cid}}}; })};
     if (ep === "playlistItems") { const R = rng(p.playlistId); const fast = R() < 0.4, tpl = R() < 0.5; return {items: Array.from({length: 6 + Math.floor(R() * 20)}, (_, i) => ({snippet: {title: demoTitle(R, tpl)}, contentDetails: {videoId: p.playlistId + "_" + i, videoPublishedAt: new Date(now - i * (fast ? 0.3 + R() * 0.5 : 0.5 + R() * 3.5) * 864e5).toISOString()}}))}; }
-    if (ep === "videos") return {items: p.id.split(",").map(id => { const R = rng(id); return {id, snippet: {title: demoTitle(R, true), thumbnails: {}, categoryId: R() < 0.35 ? "1" : "24", tags: R() < 0.3 ? ["animação", "e se"] : ["curiosidades"]}, statistics: {viewCount: String(Math.round(10 ** (3 + R() * 4.3)))}, contentDetails: {duration: "PT" + (8 + Math.floor(R() * (R() < 0.5 ? 2 : 20))) + "M" + Math.floor(R() * 60) + "S"}}; })};
+    if (ep === "videos") return {items: p.id.split(",").map(id => { const R = rng(id); return {id, snippet: {title: demoTitle(R, true), thumbnails: {}, categoryId: R() < 0.35 ? "1" : "24", tags: R() < 0.3 ? ["animação", "e se"] : ["curiosidades"]}, statistics: {viewCount: String(Math.round(10 ** (3 + R() * 4.3)))}, contentDetails: {duration: rng(id.split("_")[0])() < 0.4 ? "PT" + (20 + Math.floor(R() * 150)) + "S" : "PT" + (8 + Math.floor(R() * (R() < 0.5 ? 2 : 20))) + "M" + Math.floor(R() * 60) + "S"}}; })};
     return {items: []};
   }
 }
@@ -318,16 +353,21 @@ async function runSearch(p, yt, onProgress) {
   const maxAge = +p.max_age || 0;
   const aiMin = +p.ai_min || 0;
   const format = p.format || "any";
+  const dur = ["shorts", "long"].includes(p.duration) ? p.duration : "any";
+  const fmtOk = sec => dur === "shorts" ? sec > 0 && sec <= 180 : dur === "long" ? sec >= 240 : true;
   const now = new Date(), since = new Date(now - days * 864e5);
 
   const chKw = new Map();
   for (const [i, kw] of keywords.entries()) {
     onProgress(`Buscando vídeos de “${kw}” (${i + 1}/${keywords.length})…`);
-    let token;
-    for (let pg = 0; pg < pages; pg++) {
-      const d = await yt.get("search", {part: "snippet", type: "video", q: kw, order: "viewCount", publishedAfter: isoZ(since), maxResults: 50, regionCode: p.region, relevanceLanguage: p.language, videoDuration: p.duration !== "any" ? p.duration : "", pageToken: token});
-      for (const it of d.items || []) { const c = it.snippet.channelId; if (!chKw.has(c)) chKw.set(c, []); if (!chKw.get(c).includes(kw)) chKw.get(c).push(kw); }
-      token = d.nextPageToken; if (!token) break;
+    const durs = dur === "shorts" ? ["short"] : dur === "long" ? ["medium", "long"] : [""];
+    for (const vd of durs) {
+      let token;
+      for (let pg = 0; pg < pages; pg++) {
+        const d = await yt.get("search", {part: "snippet", type: "video", q: kw, order: "viewCount", publishedAfter: isoZ(since), maxResults: 50, regionCode: p.region, relevanceLanguage: p.language, videoDuration: vd, pageToken: token});
+        for (const it of d.items || []) { const c = it.snippet.channelId; if (!chKw.has(c)) chKw.set(c, []); if (!chKw.get(c).includes(kw)) chKw.get(c).push(kw); }
+        token = d.nextPageToken; if (!token) break;
+      }
     }
   }
 
@@ -360,14 +400,20 @@ async function runSearch(p, yt, onProgress) {
     if (!up) continue;
     const pl = await yt.get("playlistItems", {part: "snippet,contentDetails", playlistId: up, maxResults: 50});
     const uploads = (pl.items || []).map(it => ({...it.contentDetails, title: it.snippet?.title || ""})).filter(cd => cd.videoPublishedAt);
-    const recent = uploads.filter(cd => new Date(cd.videoPublishedAt) >= since);
-    if (!recent.length) continue;
+    if (!uploads.some(cd => new Date(cd.videoPublishedAt) >= since)) continue;
     const vids = {};
-    for (let j = 0; j < recent.length; j += 50) {
-      const vd = await yt.get("videos", {part: "statistics,snippet,contentDetails", id: recent.slice(j, j + 50).map(r => r.videoId).join(",")});
-      (vd.items || []).forEach(v => vids[v.id] = v);
-    }
+    const vd = await yt.get("videos", {part: "statistics,snippet,contentDetails", id: uploads.slice(0, 50).map(r => r.videoId).join(",")});
+    (vd.items || []).forEach(v => vids[v.id] = v);
+    const secs = id => isoDur(vids[id]?.contentDetails?.duration);
+    const recent = uploads.filter(cd => new Date(cd.videoPublishedAt) >= since && fmtOk(secs(cd.videoId)));
+    if (!recent.length) continue;
     const vv = id => +(vids[id]?.statistics?.viewCount || 0);
+    const vInfo = r => { const v = vids[r.videoId] || {}; const th = v.snippet?.thumbnails || {};
+      return {id: r.videoId, title: v.snippet?.title || r.title, views: vv(r.videoId), published: r.videoPublishedAt,
+              duration: secs(r.videoId), thumb: (th.medium || th.high || th.default || {}).url || ""}; };
+    const known = uploads.filter(u => vids[u.videoId]);
+    const shortShare = known.length ? known.filter(u => secs(u.videoId) > 0 && secs(u.videoId) <= 180).length / known.length : 0;
+    const top3 = known.filter(u => fmtOk(secs(u.videoId))).sort((a, b) => vv(b.videoId) - vv(a.videoId)).slice(0, 3).map(vInfo);
     const periodViews = recent.reduce((s, r) => s + vv(r.videoId), 0);
     const best = recent.reduce((a, b) => vv(b.videoId) > vv(a.videoId) ? b : a).videoId;
     const ref = mode === "canal" ? total : periodViews;
@@ -382,9 +428,7 @@ async function runSearch(p, yt, onProgress) {
       last_upload: recent.map(r => r.videoPublishedAt).sort().pop(), age_days: age, keywords: chKw.get(c.id) || [],
       top_video: {title: vids[best]?.snippet?.title || "", views: vv(best), url: "https://www.youtube.com/watch?v=" + best},
       description: (sn.description || "").slice(0, 400),
-      recent_videos: recent.slice(0, 12).map(r => { const v = vids[r.videoId] || {}; const th = v.snippet?.thumbnails || {};
-        return {id: r.videoId, title: v.snippet?.title || r.title, views: vv(r.videoId), published: r.videoPublishedAt,
-                duration: isoDur(v.contentDetails?.duration), thumb: (th.medium || th.high || th.default || {}).url || ""}; }),
+      recent_videos: recent.slice(0, 12).map(vInfo), top3, short_share: Math.round(shortShare * 100),
       upload_dates: uploads.map(u => u.videoPublishedAt), upload_titles: uploads.map(u => u.title).slice(0, 30), videos_total: +c.statistics.videoCount || 0
     });
     const last = results[results.length - 1];
@@ -400,7 +444,7 @@ async function runSearch(p, yt, onProgress) {
             median_ratio: rs.length ? rs[Math.floor(rs.length / 2)] : 0, found: [...chKw.values()].filter(v => v.includes(kw)).length, channels: chs};
   }).sort((a, b) => b.count - a.count || b.views_period_sum - a.views_period_sum);
 
-  return {generated_at: now.toISOString(), params: {days, min_views: minViews, max_subs: maxSubs, min_ratio: minRatio, views_mode: mode, max_age: maxAge, ai_min: aiMin, format},
+  return {generated_at: now.toISOString(), params: {days, min_views: minViews, max_subs: maxSubs, min_ratio: minRatio, views_mode: mode, max_age: maxAge, ai_min: aiMin, format, duration: dur},
           stats: {found: chKw.size, analyzed: cands.length, matched: results.length, skipped, units: yt.units}, niches, results};
 }
 
@@ -526,11 +570,11 @@ function claudeBtn(c) { return claudeResults[c.id] ? "" : `<button type="button"
 function keepOpen(fn) { const open = [...document.querySelectorAll(".niche:not(.closed)")].map(n => n.dataset.k); const y = window.scrollY; fn(); document.querySelectorAll(".niche").forEach(n => n.classList.toggle("closed", !open.includes(n.dataset.k))); window.scrollTo(0, y); }
 
 /* ---------------- cache ---------------- */
-function cacheKey(p) { return "radar_cache2_" + JSON.stringify(p); }
+function cacheKey(p) { return "radar_cache3_" + JSON.stringify(p); }
 function cacheGet(p) { try { const it = JSON.parse(load(cacheKey(p))); if (it && Date.now() - it.t < CACHE_HOURS * 36e5) return it.v; } catch (e) {} return null; }
 function cacheSet(p, v) {
   try {
-    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith("radar_cache_") || k.startsWith("radar_cache2_"))) { try { if (Date.now() - JSON.parse(localStorage.getItem(k)).t > CACHE_HOURS * 36e5) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); } } }
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && /^radar_cache\d?_/.test(k)) { try { if (Date.now() - JSON.parse(localStorage.getItem(k)).t > CACHE_HOURS * 36e5) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); } } }
     localStorage.setItem(cacheKey(p), JSON.stringify({t: Date.now(), v}));
   } catch (e) {}
 }
@@ -538,7 +582,7 @@ function cacheSet(p, v) {
 /* ---------------- actions ---------------- */
 async function execute(demo) {
   const p = readParams();
-  store("radar_form_v2", JSON.stringify(p));
+  store("radar_form_v3", JSON.stringify(p));
   const key = $("api_key").value.trim();
   if (!demo && !key) { showError("Cole sua chave da API do YouTube no primeiro campo. Clique em “Como pegar a chave da API” no topo para ver o passo a passo."); return; }
   store("radar_key", $("remember").checked && key ? key : null);
@@ -599,37 +643,59 @@ function render() {
     $("out").innerHTML = h; return;
   }
 
-  // charts
-  const maxV = Math.max(...withRes.map(n => n.views_period_sum), 1);
-  h += `<div class="grid2"><div class="card"><h3>Força dos nichos</h3><div class="sub">Views somadas nos últimos ${p.days} dias dos canais que passaram no filtro. Clique para ver os canais.</div><div class="bars">` +
-    withRes.map(n => `<div class="bar-row" onclick="openNiche('${encodeURIComponent(n.keyword)}')"><span class="name" title="${esc(n.keyword)}">${esc(n.keyword)} <span class="hint">(${n.count})</span></span><span class="track"><span class="fill" style="display:block;width:${Math.max(2, n.views_period_sum / maxV * 100)}%"></span></span><span class="val">${fmt(n.views_period_sum)}</span></div>`).join("") +
-    `</div></div><div class="card"><h3>Inscritos × views por canal</h3><div class="sub">Quanto mais para cima e à esquerda, mais o canal performa acima do tamanho. Escala logarítmica.</div><div class="scatter-wrap" id="scWrap">${scatter(d.results, withRes)}<div class="tip" id="tip"></div></div></div></div>`;
-
-  // top channels
-  const top = [...d.results].sort((a, b) => b.ratio - a.ratio).slice(0, 8);
-  h += `<div class="section-t">Destaques: maior relação views/inscrito</div><div class="top">` + top.map(c => `
-    <div class="tc"><div class="h">${c.thumb ? `<img src="${esc(c.thumb)}" alt="" loading="lazy">` : `<img alt="">`}<div><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a><div class="k">${esc(c.keywords[0])}${c.age_days <= 90 ? ' <span class="new">novo</span>' : ""}</div></div></div>
-    <div class="big">${c.ratio.toLocaleString("pt-BR")} <span class="k">views/inscrito</span></div>
-    <div class="mini"><span>Inscritos <b>${fmt(c.subs)}</b></span><span>Views <b>${fmt(c.views_total)}</b></span><span>Criado <b>${c.age_days < 365 ? Math.max(1, Math.round(c.age_days / 30)) + " m" : (c.age_days / 365).toFixed(1).replace(".", ",") + " a"} atrás</b></span></div>
-    ${thumbs(c, 4)}
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${animBadge(c)} ${aiBadge(c)} ${claudeBtn(c)}</div>
-    ${claudeResults[c.id] ? `<ul class="why"><li>${esc(claudeResults[c.id].veredito)}</li>${claudeResults[c.id].motivos.map(m => `<li>${esc(m)}</li>`).join("")}</ul>` : `<ul class="why">${c.ai_why.slice(0, 3).map(m => `<li>${esc(m)}</li>`).join("")}</ul>`}
-    <a class="vid" href="${esc(c.top_video.url)}" target="_blank" rel="noopener" title="${esc(c.top_video.title)}">▶ ${fmt(c.top_video.views)} · ${esc(c.top_video.title)}</a></div>`).join("") + `</div>`;
-
-  // niche tables
-  h += `<div class="section-t">Canais por nicho</div>`;
-  d.niches.forEach(n => {
-    h += `<div class="niche${n.count ? "" : " closed"}" data-k="${encodeURIComponent(n.keyword)}">
-      <div class="niche-h" onclick="this.parentNode.classList.toggle('closed')">
-        <span class="count${n.count ? "" : " zero"}">${n.count}</span><h2>${esc(n.keyword)}</h2>
-        <span class="m">views somadas <b>${fmt(n.views_sum)}</b></span>
-        <span class="m">no período <b>${fmt(n.views_period_sum)}</b></span>
-        <span class="m">mediana views/inscrito <b>${n.median_ratio.toLocaleString("pt-BR")}</b></span>
-        <span class="m">${n.found} canais vistos</span>
-      </div><div class="tbl">${n.count ? table(n.channels) : ""}</div></div>`;
-  });
-  $("out").innerHTML = h;
+  // tabs
+  const tabs = [`<button type="button" class="tab${activeTab === "@overview" ? " on" : ""}" onclick="setTab('@overview')">Visão geral</button>`]
+    .concat([...withRes, ...d.niches.filter(n => !n.count)].map(n => `<button type="button" class="tab${n.count ? "" : " zero"}${activeTab === n.keyword ? " on" : ""}" onclick="setTab('${encodeURIComponent(n.keyword)}')">${esc(n.keyword)} <span class="n">${n.count}</span></button>`));
+  const nicheNow = d.niches.find(n => n.keyword === activeTab);
+  let body;
+  if (!nicheNow) {
+    activeTab = "@overview";
+    const maxV = Math.max(...withRes.map(n => n.views_period_sum), 1);
+    body = h + `<div class="grid2"><div class="card"><h3>Força dos nichos</h3><div class="sub">Views somadas nos últimos ${p.days} dias dos canais que passaram no filtro. Clique para abrir o nicho.</div><div class="bars">` +
+      withRes.map(n => `<div class="bar-row" onclick="setTab('${encodeURIComponent(n.keyword)}')"><span class="name" title="${esc(n.keyword)}">${esc(n.keyword)} <span class="hint">(${n.count})</span></span><span class="track"><span class="fill" style="display:block;width:${Math.max(2, n.views_period_sum / maxV * 100)}%"></span></span><span class="val">${fmt(n.views_period_sum)}</span></div>`).join("") +
+      `</div></div><div class="card"><h3>Inscritos × views por canal</h3><div class="sub">Quanto mais para cima e à esquerda, mais o canal performa acima do tamanho. Escala logarítmica.</div><div class="scatter-wrap" id="scWrap">${scatter(d.results, withRes)}<div class="tip" id="tip"></div></div></div></div>`;
+    const top = [...d.results].sort((a, b) => b.ratio - a.ratio).slice(0, 6);
+    body += `<div class="section-t">Destaques de todos os nichos: maior relação views/inscrito</div>` + top.map(channelRow).join("");
+  } else {
+    const n = nicheNow;
+    const chs = [...n.channels].sort(SORTS[sortKey][1]);
+    body = `<div class="nh"><h2>${esc(n.keyword)}</h2>
+      <span class="m"><b>${n.count}</b> canais</span><span class="m">views somadas <b>${fmt(n.views_sum)}</b></span>
+      <span class="m">no período <b>${fmt(n.views_period_sum)}</b></span><span class="m">mediana views/inscrito <b>${n.median_ratio.toLocaleString("pt-BR")}</b></span>
+      <span class="m">${n.found} canais vistos</span>
+      <select id="sortSel" aria-label="Ordenar canais" onchange="sortKey=this.value;keepScroll(render)">${Object.entries(SORTS).map(([k, [l]]) => `<option value="${k}"${k === sortKey ? " selected" : ""}>Ordenar: ${l}</option>`).join("")}</select></div>` +
+      (n.count ? chs.map(channelRow).join("") : `<div class="empty">Nenhum canal deste nicho passou no filtro.</div>`);
+  }
+  $("out").innerHTML = `<div class="tabs" role="tablist">${tabs.join("")}</div>` + body;
   bindScatter();
+}
+
+let activeTab = "@overview", sortKey = "ratio";
+const SORTS = {ratio: ["views/inscrito", (a, b) => b.ratio - a.ratio], views_total: ["views totais", (a, b) => b.views_total - a.views_total],
+  views_period: ["views no período", (a, b) => b.views_period - a.views_period], subs: ["menos inscritos", (a, b) => a.subs - b.subs],
+  age_days: ["canal mais novo", (a, b) => a.age_days - b.age_days], ai_score: ["indício de IA", (a, b) => (claudeResults[b.id]?.score ?? b.ai_score) - (claudeResults[a.id]?.score ?? a.ai_score)]};
+function setTab(k) { activeTab = decodeURIComponent(k); render(); const t = document.querySelector(".tabs"); if (t && t.getBoundingClientRect().top < 0) t.scrollIntoView({block: "start"}); const on = document.querySelector(".tab.on"); if (on) on.scrollIntoView({inline: "center", block: "nearest"}); }
+function openNiche(k) { setTab(k); }
+function keepScroll(fn) { const y = window.scrollY; fn(); window.scrollTo(0, y); }
+const durTxt = s => s ? (s >= 3600 ? Math.floor(s / 3600) + ":" + String(Math.floor(s % 3600 / 60)).padStart(2, "0") : Math.floor(s / 60)) + ":" + String(s % 60).padStart(2, "0") : "";
+const fmtBadge = c => `<span class="ai ai-fmt" title="${c.short_share}% dos últimos vídeos são Shorts">${c.short_share >= 70 ? "Shorts" : c.short_share <= 30 ? "Vídeos longos" : "Misto"}</span>`;
+function channelRow(c) {
+  const rc = c.ratio >= 1000 ? "r-hi" : c.ratio >= 200 ? "r-mid" : "";
+  const age = c.age_days < 365 ? Math.max(1, Math.round(c.age_days / 30)) + (Math.round(c.age_days / 30) > 1 ? " meses" : " mês") : (c.age_days / 365).toFixed(1).replace(".", ",") + " anos";
+  const why = claudeResults[c.id] ? [claudeResults[c.id].veredito, ...claudeResults[c.id].motivos] : c.ai_why.slice(0, 3);
+  return `<div class="crow"><div>
+    <div class="h">${c.thumb ? `<img src="${esc(c.thumb)}" alt="" loading="lazy">` : `<img alt="">`}<div><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>
+      <div class="k">${esc(c.handle)}${c.country ? " · " + esc(c.country) : ""} · ${c.keywords.map(esc).join(", ")}${c.age_days <= 90 ? ' <span class="new">novo</span>' : ""}</div></div></div>
+    <div class="metrics">
+      <div>Views/inscrito<b class="${rc}">${c.ratio.toLocaleString("pt-BR")}</b></div><div>Inscritos<b>${fmt(c.subs)}</b></div><div>Views totais<b>${fmt(c.views_total)}</b></div>
+      <div>Views no período<b>${fmt(c.views_period)}</b></div><div>Vídeos no período<b>${c.videos_period}</b></div><div>Criado há<b>${age}</b></div>
+    </div>
+    <div class="badges">${fmtBadge(c)} ${animBadge(c)} ${aiBadge(c)} ${claudeBtn(c)}</div>
+    <ul class="why" style="margin-top:8px">${why.map(m => `<li>${esc(m)}</li>`).join("")}</ul>
+  </div>
+  <div class="top3">${(c.top3 || []).map((v, i) => `<a class="v3" href="https://www.youtube.com/watch?v=${esc(v.id)}" target="_blank" rel="noopener" title="${esc(v.title)}">
+      <div class="im">${v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : ""}<span class="rk">#${i + 1}</span>${v.duration ? `<span class="d">${durTxt(v.duration)}</span>` : ""}</div>
+      <div class="t">${esc(v.title)}</div><div class="s">${fmt(v.views)} views · ${ago(v.published)}</div></a>`).join("") || `<div class="hint">Sem vídeos no formato escolhido.</div>`}</div></div>`;
 }
 
 const PALETTE = ["#ff3b4e","#5b8cff","#2fd38a","#ffb020","#c36bff","#21c7d9","#ff7ab6","#a3d65c"];
@@ -659,35 +725,11 @@ function bindScatter() {
     c.addEventListener("click", () => window.open(r.url, "_blank", "noopener"));
   });
 }
-function openNiche(k) { const el = document.querySelector(`.niche[data-k="${k}"]`); if (el) { el.classList.remove("closed"); el.scrollIntoView({behavior: "smooth", block: "start"}); } }
 
-const COLS = [["title","Canal"],["subs","Inscritos",1],["views_total","Views totais",1],["views_period","Views no período",1],["ratio","Views/inscrito",1],["videos_period","Vídeos no período",1],["last_upload","Último vídeo"],["age_days","Idade do canal",1],["ai_score","Indício de IA",1],["thumbs","Thumbnails recentes"],["top","Vídeo mais visto no período"]];
-function table(chs) {
-  const {key: k, dir} = sortState;
-  chs = [...chs].sort((a, b) => (a[k] > b[k] ? 1 : a[k] < b[k] ? -1 : 0) * dir);
-  let h = "<table><tr>" + COLS.map(([key, l, num]) => `<th class="${num ? "num" : ""}" onclick="sortBy('${key}')">${l}${k === key ? (dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr>";
-  chs.forEach(c => {
-    const rc = c.ratio >= 1000 ? "r-hi" : c.ratio >= 200 ? "r-mid" : "";
-    h += `<tr><td><div class="ch">${c.thumb ? `<img src="${esc(c.thumb)}" loading="lazy" alt="">` : `<img alt="">`}<div><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a><small>${esc(c.handle)}${c.country ? " · " + esc(c.country) : ""} · ${c.keywords.map(esc).join(", ")}</small>${c.anim ? `<div style="margin-top:3px">${animBadge(c)}</div>` : ""}</div></div></td>
-      <td class="num">${fmt(c.subs)}</td><td class="num">${fmt(c.views_total)}</td><td class="num">${fmt(c.views_period)}</td>
-      <td class="num ratio ${rc}">${c.ratio.toLocaleString("pt-BR")}</td><td class="num">${c.videos_period}</td><td>${ago(c.last_upload)}</td>
-      <td class="num">${c.age_days < 365 ? c.age_days + " d" : (c.age_days / 365).toFixed(1).replace(".", ",") + " anos"}${c.age_days <= 90 ? '<span class="new">novo</span>' : ""}</td>
-      <td class="num">${aiBadge(c)}<div style="margin-top:4px">${claudeBtn(c)}</div></td><td>${thumbs(c, 3)}</td>
-      <td><a class="vid" href="${esc(c.top_video.url)}" target="_blank" rel="noopener" title="${esc(c.top_video.title)}">${fmt(c.top_video.views)} · ${esc(c.top_video.title)}</a></td></tr>`;
-  });
-  return h + "</table>";
-}
-function sortBy(key) {
-  if (key === "top" || key === "thumbs") return;
-  sortState = {key, dir: sortState.key === key ? -sortState.dir : -1};
-  const open = [...document.querySelectorAll(".niche:not(.closed)")].map(n => n.dataset.k);
-  render();
-  document.querySelectorAll(".niche").forEach(n => n.classList.toggle("closed", !open.includes(n.dataset.k)));
-}
 async function exportCSV() {
   if (!lastData) return;
-  const rows = [["nicho","canal","handle","url","pais","inscritos","views_totais","views_periodo","views_por_inscrito","videos_periodo","ultimo_video","idade_dias","video_top","views_video_top","url_video_top","indicio_ia","motivos_ia","animacao"]];
-  lastData.niches.forEach(n => n.channels.forEach(c => rows.push([n.keyword,c.title,c.handle,c.url,c.country,c.subs,c.views_total,c.views_period,String(c.ratio).replace(".", ","),c.videos_period,c.last_upload,c.age_days,c.top_video.title,c.top_video.views,c.top_video.url,claudeResults[c.id] ? claudeResults[c.id].score : c.ai_score,(claudeResults[c.id] ? [claudeResults[c.id].veredito, ...claudeResults[c.id].motivos] : c.ai_why).join(" | "),c.anim ? "sim" : "nao"])));
+  const rows = [["nicho","canal","handle","url","pais","inscritos","views_totais","views_periodo","views_por_inscrito","videos_periodo","ultimo_video","idade_dias","video_top","views_video_top","url_video_top","indicio_ia","motivos_ia","animacao","pct_shorts","top3_videos"]];
+  lastData.niches.forEach(n => n.channels.forEach(c => rows.push([n.keyword,c.title,c.handle,c.url,c.country,c.subs,c.views_total,c.views_period,String(c.ratio).replace(".", ","),c.videos_period,c.last_upload,c.age_days,c.top_video.title,c.top_video.views,c.top_video.url,claudeResults[c.id] ? claudeResults[c.id].score : c.ai_score,(claudeResults[c.id] ? [claudeResults[c.id].veredito, ...claudeResults[c.id].motivos] : c.ai_why).join(" | "),c.anim ? "sim" : "nao",c.short_share,(c.top3 || []).map(v => `${v.title} (${v.views}) https://youtu.be/${v.id}`).join(" | ")])));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
   // try a download first (works on normal sites), fall back to clipboard
   try {
@@ -697,6 +739,7 @@ async function exportCSV() {
   try { await navigator.clipboard.writeText(csv); } catch (e) {}
 }
 
+syncDur();
 $("out").innerHTML = intro();
 </script>
 </body>
