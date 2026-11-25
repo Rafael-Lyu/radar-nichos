@@ -153,6 +153,45 @@
   .v3 .s{font-size:11px;color:var(--muted)}
   .v3:hover .t{color:var(--accent)}
   .ai-fmt{color:var(--text);border-color:var(--line);background:var(--panel2)}
+  .seg2{grid-template-columns:repeat(2,1fr);margin-top:14px}
+  .ol-langs{display:flex;flex-wrap:wrap;gap:6px}
+  .ol-langs label{display:flex;align-items:center;gap:5px;margin:0;padding:5px 9px;border:1px solid var(--line);border-radius:99px;font-size:12px;color:var(--text);cursor:pointer;background:var(--panel2)}
+  .ol-langs input{width:auto;margin:0}
+  .ol-niches{display:grid;gap:8px}
+  .ol-n{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg)}
+  .ol-n .top{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .ol-n .top input{font-weight:600}
+  .ol-n .top button{flex:none;padding:4px 9px}
+  .ol-n .terms{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 6px;align-items:center}
+  .ol-n .terms span{font-size:11px;color:var(--muted);text-transform:uppercase}
+  .ol-n .terms input{padding:5px 8px;font-size:12px}
+  .ol-n .terms input.miss{border-color:var(--warn)}
+  .ol-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .ol-actions button{font-size:12px;padding:6px 10px}
+  .oltbl{overflow-x:auto}
+  .oltbl table{width:100%;border-collapse:collapse;font-size:13px}
+  .oltbl th,.oltbl td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+  .oltbl th{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .oltbl td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .oltbl td.who{white-space:normal;min-width:220px;color:var(--muted);font-size:12px}
+  .vd{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;border:1px solid}
+  .vd-forte{color:var(--good);border-color:var(--good);background:#2fd38a1a}
+  .vd-media{color:var(--warn);border-color:var(--warn);background:#ffb0201a}
+  .vd-fraca{color:var(--muted);border-color:var(--line)}
+  .vd-ref{color:#5bc8ff;border-color:#5bc8ff;background:#5bc8ff1a}
+  .stack-row{display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:10px;align-items:center;font-size:12px;margin:6px 0}
+  .stack{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--panel2)}
+  .stack i{display:block;height:100%}
+  .s-nat{background:#2fd38a} .s-dub{background:#ff3b4e} .s-for{background:#5b6478}
+  .stack-row .val{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+  .olniche{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .olniche h3{margin:0 0 2px;font-size:16px}
+  .olniche .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  .olniche .cols h4{margin:0 0 6px;font-size:12px;color:var(--muted);font-weight:600}
+  .olniche .cols ol{margin:0;padding-left:18px;font-size:12px}
+  .olniche .cols li{margin:3px 0}
+  .olniche .cols a{color:var(--text);text-decoration:none} .olniche .cols a:hover{color:var(--accent)}
+  @media(max-width:600px){.stack-row{grid-template-columns:70px minmax(0,1fr);}.stack-row .val{grid-column:1/-1;text-align:left}}
   .help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:14px}
   .help h3{margin:0 0 8px}
   .help ol{margin:0;padding-left:20px;color:var(--muted)}
@@ -174,6 +213,11 @@
     <input id="api_key" type="password" placeholder="Cole sua chave aqui" autocomplete="off">
     <label class="check"><input type="checkbox" id="remember" checked> Lembrar neste navegador</label>
     <div class="hint">A chave fica só no seu navegador e vai direto para o Google.</div>
+
+    <div class="seg seg2" id="modeSeg" role="tablist" aria-label="Modo">
+      <button type="button" data-v="radar">Radar de canais</button><button type="button" data-v="ol">OutLanguage</button>
+    </div>
+    <div id="radarFields">
 
     <label for="keywords">Nichos / palavras-chave (uma por linha)</label>
     <textarea id="keywords"></textarea>
@@ -223,11 +267,36 @@
       <select id="pages"><option value="1">1 página por nicho (50 vídeos)</option><option value="2">2 páginas (100 vídeos)</option><option value="3">3 páginas (150 vídeos)</option></select>
       <label class="check"><input type="checkbox" id="use_cache" checked> Reaproveitar resultados das últimas 6h</label>
     </details>
+    </div>
+
+    <div id="olFields" hidden>
+      <div class="hint" style="margin-top:10px">Compara o mesmo nicho em vários idiomas e mostra onde ele é forte num idioma e fraco em outro. Conta só vídeos de 4 minutos ou mais: Shorts nunca entram.</div>
+      <div class="row">
+        <div><label for="ol_src">Idioma de origem</label>
+          <select id="ol_src"><option value="en">Inglês</option><option value="pt">Português</option><option value="es">Espanhol</option><option value="fr">Francês</option><option value="de">Alemão</option></select></div>
+        <div><label for="ol_months">Vídeos enviados nos últimos</label>
+          <select id="ol_months"><option value="6">6 meses</option><option value="12">12 meses</option><option value="24">24 meses</option></select></div>
+      </div>
+      <label>Idiomas alvo</label>
+      <div class="ol-langs" id="ol_tgts"></div>
+      <label>Nichos e o termo buscado em cada idioma</label>
+      <div class="ol-niches" id="olNiches"></div>
+      <div class="ol-actions">
+        <button type="button" id="olAdd">+ Nicho em branco</button>
+        <button type="button" id="olClaude">Completar termos com Claude</button>
+        <button type="button" id="olClear">Limpar</button>
+      </div>
+      <div class="hint">Use o termo que o nativo digitaria, não a tradução literal. Sugestões prontas:</div>
+      <div class="chips" id="olPresets"></div>
+      <label for="ol_top">Vídeos analisados por idioma</label>
+      <select id="ol_top"><option value="20">Top 20 (recomendado)</option><option value="30">Top 30</option><option value="50">Top 50</option></select>
+    </div>
+
     <details id="claudeBox">
       <summary>Análise de thumbnails com IA (opcional)</summary>
       <label for="claude_key">Chave da API da Anthropic (Claude)</label>
       <input id="claude_key" type="password" placeholder="sk-ant-..." autocomplete="off">
-      <div class="hint">Com ela aparece o botão “Analisar com Claude” em cada canal: o Claude olha as 4 thumbnails e os títulos recentes e diz se parecem feitos por IA. Custa centavos por canal, cobrados na sua conta da Anthropic (console.anthropic.com). Sem a chave, a ferramenta usa só a pontuação automática.</div>
+      <div class="hint">Com ela aparece o botão “Analisar com Claude” em cada canal: o Claude olha as 4 thumbnails e os títulos recentes e diz se parecem feitos por IA. Custa centavos por canal, cobrados na sua conta da Anthropic (console.anthropic.com). Sem a chave, a ferramenta usa só a pontuação automática. No modo OutLanguage, a mesma chave serve para completar os termos de busca em outros idiomas.</div>
     </details>
 
     <div class="quota" id="quota"></div>
@@ -249,6 +318,7 @@ let lastData = null, sortState = {key:"ratio", dir:-1};
 
 const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch (e) {} };
 const load = k => { try { return localStorage.getItem(k) } catch (e) { return null } };
+var mode = load("radar_mode") === "ol" ? "ol" : "radar";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = n => { n = +n || 0; const f = (x, d) => x.toFixed(d).replace(".", ","); if (n >= 1e9) return f(n/1e9, n>=1e10?0:1)+" bi"; if (n >= 1e6) return f(n/1e6, n>=1e7?0:1)+" mi"; if (n >= 1e3) return f(n/1e3, n>=1e4?0:1)+" mil"; return String(Math.round(n)); };
 const ago = s => { const d = Math.floor((Date.now() - new Date(s)) / 864e5); return d < 1 ? "hoje" : d === 1 ? "ontem" : `há ${d} dias`; };
@@ -284,6 +354,7 @@ function syncDur() { document.querySelectorAll("#durSeg button").forEach(b => b.
 document.querySelectorAll("#durSeg button").forEach(b => b.onclick = () => { $("duration").value = b.dataset.v; syncDur(); });
 
 function updateQuota() {
+  if (typeof mode !== "undefined" && mode === "ol") return olQuota();
   const n = $("keywords").value.split(/[\n,]/).map(s => s.trim()).filter(Boolean).length;
   const search = n * (+$("pages").value) * 100 * ($("duration").value === "long" ? 2 : 1);
   const max = Math.round(search * 1.6);
@@ -581,6 +652,7 @@ function cacheSet(p, v) {
 
 /* ---------------- actions ---------------- */
 async function execute(demo) {
+  if (mode === "ol") return executeOL(demo);
   const p = readParams();
   store("radar_form_v3", JSON.stringify(p));
   const key = $("api_key").value.trim();
@@ -617,6 +689,7 @@ function helpHtml() {
   <p class="hint">A cota grátis é de 10.000 unidades por dia. Cada nicho custa ~100 por busca, mais ~2 por canal analisado.</p></div>`;
 }
 function intro() {
+  if (mode === "ol") return olIntro();
   return `<div class="empty">Escolha os nichos à esquerda e clique em <b>Buscar nichos em alta</b>.<br><br>
   A ferramenta procura os vídeos mais vistos do período em cada nicho, olha os canais por trás deles<br>e mostra só os que têm muitas views e poucos inscritos.<br><br>Sem chave ainda? Clique em <b>Ver exemplo</b>.</div>`;
 }
@@ -741,6 +814,322 @@ async function exportCSV() {
 
 syncDur();
 $("out").innerHTML = intro();
+
+/* ================= OutLanguage: nichos fortes num idioma e fracos em outro ================= */
+const OL_LANGS = {en: ["Inglês", "US"], pt: ["Português", "BR"], es: ["Espanhol", "MX"], fr: ["Francês", "FR"], de: ["Alemão", "DE"]};
+const OL_MIN_SEC = 240; // 4 min: Shorts e vídeos curtos nunca entram
+// Tamanho típico de cada idioma (soma de views do top 20 nativo, mediana de 48 nichos, medido em 25/11/2026).
+// Serve para não confundir "o idioma é menor" com "o nicho tem lacuna". É fixo de propósito: medir só nos nichos
+// escolhidos distorce a conta quando todos eles são candidatos a lacuna.
+const OL_REF_BASE = {en: 63.5e6, pt: 8.8e6, es: 22.9e6, fr: 14.7e6, de: 7.8e6};
+const OL_PRESETS = [
+  {name: "Bodycam policial", en: "bodycam footage", pt: "bodycam polícia", es: "cámara corporal policía", fr: "caméra piéton police", de: "Bodycam Polizei"},
+  {name: "Serial killer", en: "serial killer documentary", pt: "serial killer documentário", es: "asesino serial documental", fr: "tueur en série documentaire", de: "Serienmörder Doku"},
+  {name: "História militar", en: "military history documentary", pt: "história militar documentário", es: "historia militar documental", fr: "histoire militaire documentaire", de: "Militärgeschichte Doku"},
+  {name: "Segunda Guerra", en: "ww2 documentary", pt: "segunda guerra mundial documentário", es: "segunda guerra mundial documental", fr: "seconde guerre mondiale documentaire", de: "Zweiter Weltkrieg Doku"},
+  {name: "Guerra Fria", en: "cold war documentary", pt: "guerra fria documentário", es: "guerra fría documental", fr: "guerre froide documentaire", de: "Kalter Krieg Doku"},
+  {name: "Espaço", en: "space documentary", pt: "documentário espaço universo", es: "documental espacio universo", fr: "documentaire espace univers", de: "Weltraum Doku"},
+  {name: "Biografia", en: "biography documentary", pt: "biografia documentário", es: "biografía documental", fr: "biographie documentaire", de: "Biografie Doku"},
+  {name: "True crime", en: "true crime documentary", pt: "documentário crime real", es: "documental crimen real", fr: "documentaire affaire criminelle", de: "True Crime Doku"},
+  {name: "Interrogatório", en: "police interrogation", pt: "interrogatório policial", es: "interrogatorio policial", fr: "interrogatoire de police", de: "Polizeiverhör"},
+  {name: "Paranormal", en: "paranormal stories", pt: "casos paranormais", es: "casos paranormales", fr: "histoires paranormales", de: "paranormale Geschichten"},
+  {name: "Pré-histórico", en: "prehistoric creatures", pt: "criaturas pré-históricas", es: "criaturas prehistóricas", fr: "créatures préhistoriques", de: "prähistorische Tiere"},
+  {name: "Psicologia obscura", en: "dark psychology", pt: "psicologia obscura", es: "psicología oscura", fr: "psychologie noire", de: "dunkle Psychologie"},
+  {name: "Estoicismo", en: "stoicism", pt: "estoicismo", es: "estoicismo", fr: "stoïcisme", de: "Stoizismus"},
+  {name: "Mistérios", en: "unsolved mysteries", pt: "mistérios não resolvidos", es: "misterios sin resolver", fr: "mystères non résolus", de: "ungelöste Rätsel"},
+  {name: "Histórias de terror", en: "scary stories", pt: "histórias de terror", es: "historias de terror", fr: "histoires d'horreur", de: "Gruselgeschichten"},
+  {name: "Reddit stories", en: "reddit stories", pt: "histórias do reddit", es: "historias de reddit", fr: "histoires reddit", de: "Reddit Geschichten"},
+  {name: "Iceberg", en: "iceberg explained", pt: "iceberg explicado", es: "iceberg explicado", fr: "iceberg expliqué", de: "Eisberg erklärt"},
+  {name: "Mitologia", en: "greek mythology explained", pt: "mitologia grega", es: "mitología griega", fr: "mythologie grecque", de: "griechische Mythologie"},
+  {name: "Desastres aéreos", en: "plane crash investigation", pt: "acidente aéreo investigação", es: "accidente aéreo investigación", fr: "crash aérien enquête", de: "Flugzeugabsturz Untersuchung"},
+  {name: "E se", en: "what if scenario", pt: "e se acontecesse", es: "qué pasaría si", fr: "et si scénario", de: "was wäre wenn"},
+];
+
+/* ---- idioma de um título (heurística por palavras comuns e acentos) ---- */
+const OL_SW = {
+  en: "the and of to is you that what how why this with for was are your who when they his her it from into my all",
+  pt: "não você para com uma como mais foi isso seu sua quando porque também então pelo pela nos dos das ao são está o os do da em um que e se sem até nunca sobre ele ela",
+  es: "el los las del por con una para cómo qué más fue esto este esta cuando porque también pero muy son está y un que en la si usa estos estas tu tus te lo le hay sin hasta nunca",
+  fr: "le les des et une est qui pour dans du pas sur au aux ce cette sont comment pourquoi quand avec il elle vous un que en la",
+  de: "der die das und ist nicht ein eine mit zu von den wie was auf für im des dem sich warum wenn wurde",
+};
+const OL_SETS = Object.fromEntries(Object.entries(OL_SW).map(([k, v]) => [k, new Set(v.split(" "))]));
+const OL_ACC = {pt: /[ãõ]|ção|ções/, es: /[ñ¿¡]|ción/, de: /[äöüß]/, fr: /[èêëàùœ]/};
+function olTitleLang(t) {
+  t = String(t || "");
+  if (/[぀-ヿ一-鿿가-힯Ѐ-ӿ؀-ۿऀ-෿]/.test(t)) return "outro";
+  const low = t.toLowerCase(), w = low.split(/[^a-zà-ÿœß]+/).filter(Boolean), sc = {};
+  for (const k in OL_SETS) sc[k] = w.filter(x => OL_SETS[k].has(x)).length + (OL_ACC[k] && OL_ACC[k].test(low) ? 2 : 0);
+  let best = "und", bv = 0; for (const k in sc) if (sc[k] > bv) { bv = sc[k]; best = k; }
+  if (best === "und" && /^[\x00-\x7F’—–]*$/.test(t)) best = "en";
+  return best;
+}
+// Idioma original do vídeo: o áudio declarado pelo canal vale mais que o título.
+function olOrigLang(v) {
+  const a = (v.snippet.defaultAudioLanguage || "").slice(0, 2).toLowerCase();
+  if (a && a !== "zx") return a; // "zxx" = sem fala
+  const d = (v.snippet.defaultLanguage || "").slice(0, 2).toLowerCase();
+  if (d) return d;
+  return olTitleLang(v.snippet.title);
+}
+function olClassify(v, lang) {
+  const orig = olOrigLang(v);
+  if (orig === lang) return "nat";
+  const loc = v.snippet.localized?.title || "";
+  if (loc && loc !== v.snippet.title && olTitleLang(loc) === lang) return "dub";
+  if (olTitleLang(loc || v.snippet.title) === lang && orig !== lang && v.snippet.defaultAudioLanguage) return "dub";
+  return "for";
+}
+
+/* ---- estado do formulário ---- */
+let olNiches = [], olData = null;
+try { olNiches = JSON.parse(load("radar_ol_niches") || "null") || []; } catch (e) { olNiches = []; }
+if (!olNiches.length) olNiches = OL_PRESETS.slice(0, 4).map(p => ({...p}));
+try { const c = JSON.parse(load("radar_ol_cfg") || "{}"); ["ol_src", "ol_months", "ol_top"].forEach(f => { if (c[f]) $(f).value = c[f]; }); var olTgtSaved = c.tgts; } catch (e) {}
+$("ol_tgts").innerHTML = Object.entries(OL_LANGS).map(([k, [n]]) => `<label><input type="checkbox" value="${k}">${n}</label>`).join("");
+(olTgtSaved || ["pt", "es"]).forEach(k => { const el = $("ol_tgts").querySelector(`input[value="${k}"]`); if (el) el.checked = true; });
+function olLangs() { const src = $("ol_src").value; return [src, ...[...$("ol_tgts").querySelectorAll("input:checked")].map(i => i.value).filter(k => k !== src)]; }
+function olSave() { store("radar_ol_niches", JSON.stringify(olNiches)); store("radar_ol_cfg", JSON.stringify({ol_src: $("ol_src").value, ol_months: $("ol_months").value, ol_top: $("ol_top").value, tgts: olLangs().slice(1)})); }
+function olRenderForm() {
+  const langs = olLangs();
+  $("olNiches").innerHTML = olNiches.map((n, i) => `<div class="ol-n"><div class="top"><input aria-label="Nome do nicho" data-i="${i}" data-k="name" value="${esc(n.name)}" placeholder="Nome do nicho"><button type="button" class="mini-btn" data-del="${i}" aria-label="Remover nicho">✕</button></div>
+    <div class="terms">${langs.map(l => `<span>${l}</span><input aria-label="Termo em ${OL_LANGS[l][0]}" data-i="${i}" data-k="${l}" value="${esc(n[l] || "")}" placeholder="termo em ${OL_LANGS[l][0].toLowerCase()}" class="${n[l] ? "" : "miss"}">`).join("")}</div></div>`).join("") || `<div class="hint">Nenhum nicho. Clique numa sugestão abaixo.</div>`;
+  $("olNiches").querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { olNiches[+inp.dataset.i][inp.dataset.k] = inp.value; if (inp.dataset.k !== "name") inp.classList.toggle("miss", !inp.value.trim()); olSave(); olQuota(); }));
+  $("olNiches").querySelectorAll("[data-del]").forEach(b => b.onclick = () => { olNiches.splice(+b.dataset.del, 1); olSave(); olRenderForm(); });
+  olQuota();
+}
+OL_PRESETS.forEach(p => {
+  const c = document.createElement("button"); c.type = "button"; c.className = "chip"; c.textContent = "+ " + p.name;
+  c.onclick = () => { if (!olNiches.some(n => n.name === p.name)) { olNiches.push({...p}); olSave(); olRenderForm(); } };
+  $("olPresets").appendChild(c);
+});
+$("olAdd").onclick = () => { olNiches.push({name: ""}); olSave(); olRenderForm(); const ins = $("olNiches").querySelectorAll(".top input"); if (ins.length) ins[ins.length - 1].focus(); };
+$("olClear").onclick = () => { olNiches = []; olSave(); olRenderForm(); };
+["ol_src", "ol_months", "ol_top"].forEach(id => $(id).addEventListener("change", () => { olSave(); olRenderForm(); }));
+$("ol_tgts").addEventListener("change", () => { olSave(); olRenderForm(); });
+
+function olQuota() {
+  const langs = olLangs(), top = +$("ol_top").value;
+  const searches = olNiches.reduce((a, n) => a + langs.filter(l => (n[l] || "").trim()).length, 0);
+  const units = searches * 200 + searches * Math.ceil(top * 2 / 50);
+  $("quota").innerHTML = `Custo estimado: <b>~${units.toLocaleString("pt-BR")}</b> unidades (${searches} buscas × vídeos médios e longos)<br>Cota grátis: 10.000/dia → cerca de <b>${Math.max(0, Math.floor(10000 / Math.max(units, 1)))}</b> rodadas assim por dia.`;
+}
+
+/* ---- modo ---- */
+function setMode(m) {
+  mode = m; store("radar_mode", m);
+  document.querySelectorAll("#modeSeg button").forEach(b => { b.classList.toggle("on", b.dataset.v === m); b.setAttribute("aria-selected", b.dataset.v === m); });
+  $("radarFields").hidden = m === "ol"; $("olFields").hidden = m !== "ol";
+  $("go").textContent = goLabel();
+  $("demoBadge").hidden = true;
+  if (m === "ol") olRenderForm(); else updateQuota();
+  $("out").innerHTML = m === "ol" ? (olData ? "" : olIntro()) : (lastData ? "" : intro());
+  if (m === "ol" && olData) olRender(); else if (m === "radar" && lastData) render();
+}
+function goLabel() { return mode === "ol" ? "Medir lacunas entre idiomas" : "Buscar nichos em alta"; }
+document.querySelectorAll("#modeSeg button").forEach(b => b.onclick = () => setMode(b.dataset.v));
+new MutationObserver(() => { const b = $("go"); if (!b.disabled && b.textContent !== goLabel()) b.textContent = goLabel(); }).observe($("go"), {childList: true});
+
+function olIntro() {
+  return `<div class="empty"><b>OutLanguage</b>: nichos que existem num idioma e quase não existem em outro.<br><br>
+  Para cada nicho, a ferramenta busca os vídeos longos mais vistos em cada idioma e separa:<br>
+  <b>nativos</b> (canais do próprio idioma), <b>dublados</b> (canais de outro idioma com título ou áudio traduzido) e <b>estrangeiros</b>.<br><br>
+  Muitos views em dublagens e poucos nativos = público existe, mas ninguém produz direto no idioma.<br><br>Sem chave ainda? Clique em <b>Ver exemplo</b>.</div>`;
+}
+
+/* ---- busca ---- */
+async function olMeasure(yt, q, lang, since, top) {
+  const ids = [];
+  for (const dur of ["medium", "long"]) {
+    const d = await yt.get("search", {part: "snippet", type: "video", q, order: "viewCount", publishedAfter: isoZ(since), maxResults: Math.min(50, top), regionCode: OL_LANGS[lang][1], relevanceLanguage: lang, videoDuration: dur});
+    (d.items || []).forEach(it => { const id = it.id?.videoId; if (id && !ids.includes(id)) ids.push(id); });
+  }
+  const vids = [];
+  for (let i = 0; i < ids.length; i += 50) {
+    const d = await yt.get("videos", {part: "snippet,statistics,contentDetails", id: ids.slice(i, i + 50).join(","), hl: lang, maxResults: 50});
+    vids.push(...(d.items || []));
+  }
+  const rows = vids.map(v => ({id: v.id, title: v.snippet.localized?.title || v.snippet.title, orig_title: v.snippet.title, channel: v.snippet.channelTitle, channel_id: v.snippet.channelId,
+      views: +(v.statistics?.viewCount || 0), duration: isoDur(v.contentDetails?.duration), audio: v.snippet.defaultAudioLanguage || "", kind: olClassify(v, lang)}))
+    .filter(r => r.duration >= OL_MIN_SEC).sort((a, b) => b.views - a.views).slice(0, top);
+  const group = kind => { const m = {}; rows.filter(r => r.kind === kind).forEach(r => { const c = m[r.channel_id] || (m[r.channel_id] = {id: r.channel_id, name: r.channel, views: 0, videos: 0}); c.views += r.views; c.videos++; }); return Object.values(m).sort((a, b) => b.views - a.views); };
+  const sum = kind => rows.filter(r => r.kind === kind).reduce((a, r) => a + r.views, 0);
+  return {q, lang, n: rows.length, nat: rows.filter(r => r.kind === "nat").length, dub: rows.filter(r => r.kind === "dub").length, for: rows.filter(r => r.kind === "for").length,
+    nat_views: sum("nat"), dub_views: sum("dub"), for_views: sum("for"), nat_channels: group("nat"), dub_channels: group("dub"), top_videos: rows.slice(0, 5)};
+}
+
+async function runOutLanguage(cfg, yt, onProgress) {
+  const since = new Date(Date.now() - cfg.months * 30.4 * 864e5);
+  const niches = [];
+  let step = 0; const total = cfg.niches.reduce((a, n) => a + cfg.langs.filter(l => n[l]).length, 0);
+  for (const n of cfg.niches) {
+    const per = {};
+    for (const l of cfg.langs) {
+      if (!n[l]) continue;
+      onProgress(`Medindo “${n.name}” em ${OL_LANGS[l][0].toLowerCase()}… (${++step}/${total})`);
+      per[l] = await olMeasure(yt, n[l], l, since, cfg.top);
+    }
+    niches.push({name: n.name, terms: Object.fromEntries(cfg.langs.map(l => [l, n[l] || ""])), per});
+  }
+  // tamanho típico de cada idioma (referência de 48 nichos), proporcional ao top escolhido
+  const base = Object.fromEntries(cfg.langs.map(l => [l, OL_REF_BASE[l] * cfg.top / 20]));
+  const src = cfg.langs[0], gaps = [];
+  for (const n of niches) {
+    const S = n.per[src]; if (!S) continue;
+    const sIdx = S.nat_views / base[src];
+    for (const l of cfg.langs.slice(1)) {
+      const T = n.per[l]; if (!T || !T.n) continue;
+      const tIdx = (T.nat_views + 0.03 * base[l]) / base[l];
+      const lacuna = sIdx / tIdx, dubShare = T.dub / T.n, natShare = T.nat / T.n;
+      const score = lacuna * (1 + dubShare);
+      const verdict = score >= 6 && T.dub >= 4 && sIdx >= 0.5 ? "forte" : score >= 2.5 && (T.dub + T.for) >= T.n * 0.4 ? "media" : "fraca";
+      gaps.push({niche: n.name, src, lang: l, score: +score.toFixed(1), lacuna: +lacuna.toFixed(1), src_idx: +sIdx.toFixed(2), nat: T.nat, dub: T.dub, for: T.for, n: T.n,
+        nat_views: T.nat_views, dub_views: T.dub_views, src_nat_views: S.nat_views, nat_share: natShare, verdict, occupiers: T.dub_channels.slice(0, 3), natives: T.nat_channels.slice(0, 3)});
+    }
+  }
+  gaps.sort((a, b) => b.score - a.score);
+  return {generated_at: new Date().toISOString(), cfg, niches, gaps, base, units: yt.units};
+}
+
+/* ---- dados de exemplo (sem chave) ---- */
+class OLDemoYT {
+  constructor() { this.units = 0; }
+  async get(ep, p) {
+    this.units += COST[ep] || 1;
+    await new Promise(r => setTimeout(r, 25));
+    if (ep === "search") { const R = rng(p.q + p.relevanceLanguage + p.videoDuration); return {items: Array.from({length: Math.min(p.maxResults, 25)}, (_, i) => ({id: {videoId: `${p.relevanceLanguage}~${encodeURIComponent(p.q)}~${p.videoDuration}~${i}~${Math.floor(R() * 1e6)}`}}))}; }
+    if (ep === "videos") {
+      return {items: p.id.split(",").map(id => {
+        const [lang, qe, dur, i] = id.split("~"), q = decodeURIComponent(qe), R = rng(id);
+        const H = rng(q.length + lang)(), gapNiche = rng(q.slice(0, 4))() < 0.55; // alguns nichos com lacuna
+        const pNat = lang === "en" ? 0.85 : gapNiche ? 0.1 + H * 0.2 : 0.6 + H * 0.3, pDub = lang === "en" ? 0.05 : gapNiche ? 0.55 : 0.15;
+        const x = R(), kind = x < pNat ? "nat" : x < pNat + pDub ? "dub" : "for";
+        const scale = {en: 6.4, pt: 5.4, es: 5.8, fr: 5.4, de: 5.1}[lang] || 5;
+        const views = Math.round(10 ** (scale - 0.9 + R() * 1.8) * (kind === "dub" ? 1.8 : 1));
+        const owners = {nat: ["Canal Nativo", "Arquivo Sombrio", "Docs Locais", "Narrativas"], dub: ["Dark Files", "Crime Vault", "Deep Docs", "War Archive"], for: ["Global Mix", "Clips Intl"]}[kind];
+        const ch = owners[Math.floor(R() * owners.length)];
+        const audio = kind === "nat" ? lang : kind === "dub" ? "en" : ["en", "hi", "ru"][Math.floor(R() * 3)];
+        const TPL = {pt: "A história de {q} que você não conhece", es: "La historia de {q} que no conoces", fr: "L'histoire de {q} que vous ne connaissez pas", de: "Die Geschichte von {q}, die du nicht kennst", en: "The story of {q} you never knew"};
+        const title = (TPL[lang] || TPL.en).replace("{q}", q) + ` #${+i + 1}`;
+        return {id, snippet: {title: kind === "nat" ? title : "Original title " + i, localized: {title: kind === "for" ? "Original title " + i : title}, channelTitle: ch + (kind === "nat" ? " " + lang.toUpperCase() : ""), channelId: "UC" + ch.replace(/\W/g, "") + (kind === "nat" ? lang : ""), defaultAudioLanguage: audio},
+          statistics: {viewCount: String(views)}, contentDetails: {duration: dur === "long" ? `PT${25 + Math.floor(R() * 40)}M` : `PT${5 + Math.floor(R() * 14)}M${Math.floor(R() * 60)}S`}};
+      })};
+    }
+    return {items: []};
+  }
+}
+
+/* ---- executar ---- */
+async function executeOL(demo) {
+  const langs = olLangs();
+  const niches = olNiches.map(n => ({...n, name: (n.name || "").trim() || (n[langs[0]] || "").trim()})).filter(n => n.name && langs.some(l => (n[l] || "").trim()));
+  niches.forEach(n => langs.forEach(l => { n[l] = (n[l] || "").trim(); }));
+  if (langs.length < 2) { showError("Escolha pelo menos um idioma alvo diferente do idioma de origem."); return; }
+  if (!niches.length) { showError("Adicione pelo menos um nicho com o termo de busca preenchido."); return; }
+  const key = $("api_key").value.trim();
+  if (!demo && !key) { showError("Cole sua chave da API do YouTube no primeiro campo. Clique em “Como pegar a chave da API” no topo para ver o passo a passo."); return; }
+  store("radar_key", $("remember").checked && key ? key : null);
+  olSave();
+  const cfg = {langs, niches: niches.slice(0, 20), months: +$("ol_months").value, top: +$("ol_top").value};
+  const ck = "radar_olcache_" + JSON.stringify(cfg);
+  const btn = $("go"); btn.disabled = true; $("demoBtn").disabled = true; btn.innerHTML = '<span class="spinner"></span>Medindo…';
+  const progress = msg => { $("out").innerHTML = `<div class="progress"><span class="spinner"></span>${esc(msg)}</div>`; };
+  try {
+    let data = null;
+    if (!demo && $("use_cache").checked) { try { const it = JSON.parse(load(ck)); if (it && Date.now() - it.t < 24 * 36e5) data = it.v; } catch (e) {} }
+    const fromCache = !!data;
+    if (!data) {
+      data = await runOutLanguage(cfg, demo ? new OLDemoYT() : new YT(key), progress);
+      if (!demo) { try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith("radar_olcache_")) { try { if (Date.now() - JSON.parse(localStorage.getItem(k)).t > 24 * 36e5) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); } } } localStorage.setItem(ck, JSON.stringify({t: Date.now(), v: data})); } catch (e) {} }
+    }
+    data.from_cache = fromCache; data.demo = demo; olData = data; olOpen = null; olRender();
+  } catch (err) { showError(err.message); }
+  finally { btn.disabled = false; $("demoBtn").disabled = false; btn.textContent = goLabel(); }
+}
+
+/* ---- resultado ---- */
+let olOpen = null;
+const VERDICT = {forte: ["Lacuna forte", "vd-forte"], media: ["Lacuna média", "vd-media"], fraca: ["Fraca ou saturado", "vd-fraca"]};
+const LN = l => OL_LANGS[l]?.[0] || l;
+function olChannelLink(c) { return `<a href="https://www.youtube.com/channel/${esc(c.id)}" target="_blank" rel="noopener">${esc(c.name)}</a> <span class="hint">${fmt(c.views)}</span>`; }
+function olRender() {
+  const d = olData, src = d.cfg.langs[0], tg = d.cfg.langs.slice(1);
+  $("demoBadge").hidden = !d.demo;
+  const strong = d.gaps.filter(g => g.verdict === "forte"), med = d.gaps.filter(g => g.verdict === "media");
+  let h = `<div class="summary">
+    <div class="stat"><div class="v">${strong.length}</div><div class="l">lacunas fortes</div></div>
+    <div class="stat"><div class="v">${med.length}</div><div class="l">lacunas médias</div></div>
+    <div class="stat"><div class="v">${d.niches.length}</div><div class="l">nichos medidos</div></div>
+    <div class="stat"><div class="v">${tg.length + 1}</div><div class="l">idiomas (origem: ${esc(LN(src).toLowerCase())})</div></div>
+    <div class="stat"><div class="v">${d.from_cache ? "0" : d.units.toLocaleString("pt-BR")}</div><div class="l">${d.from_cache ? "cota gasta (cache)" : "unidades de cota gastas"}</div></div>
+  </div>
+  <div class="toolbar"><span class="grow hint">Só vídeos de 4 min ou mais, enviados nos últimos <b>${d.cfg.months}</b> meses · top <b>${d.cfg.top}</b> por idioma · tamanho típico de um nicho em cada idioma: ${d.cfg.langs.map(l => `${l.toUpperCase()} ${fmt(d.base[l])}`).join(", ")}</span>
+  <button type="button" onclick="olExportCSV()">Baixar CSV</button></div>`;
+  if (!d.gaps.length) { $("out").innerHTML = h + `<div class="empty">Nenhum resultado. Confira se cada nicho tem o termo preenchido no idioma de origem e em pelo menos um idioma alvo.</div>`; return; }
+  h += `<div class="card" style="margin-bottom:14px"><h3>Top lacunas</h3><div class="sub">Score = quanto o nicho é mais forte em ${esc(LN(src).toLowerCase())} do que no idioma alvo (já descontado o tamanho de cada idioma), com peso extra quando o alvo está cheio de dublagens. Clique numa linha para ver os canais.</div>
+  <div class="oltbl"><table><thead><tr><th>Nicho</th><th>Alvo</th><th>Veredito</th><th>Score</th><th>Top ${d.cfg.top} no alvo<br>nat / dub / estr</th><th>Views dubladas</th><th>Views nativas</th><th>Quem ocupa com dublagem</th></tr></thead><tbody>` +
+    d.gaps.map(g => `<tr style="cursor:pointer" onclick="olOpenNiche('${encodeURIComponent(g.niche)}')"><td><b>${esc(g.niche)}</b></td><td>${esc(LN(g.lang))}</td><td><span class="vd ${VERDICT[g.verdict][1]}">${VERDICT[g.verdict][0]}</span></td><td class="num">${g.score.toLocaleString("pt-BR")}</td>
+      <td class="num">${g.nat} / ${g.dub} / ${g.for}</td><td class="num">${fmt(g.dub_views)}</td><td class="num">${fmt(g.nat_views)}</td><td class="who">${g.occupiers.map(c => esc(c.name)).join(", ") || "—"}</td></tr>`).join("") +
+    `</tbody></table></div></div>`;
+  h += `<div class="legend" style="margin:0 0 10px"><span><i class="s-nat"></i>nativos</span><span><i class="s-dub"></i>dublados / título traduzido</span><span><i class="s-for"></i>estrangeiros</span></div>`;
+  const order = [...d.niches].sort((a, b) => Math.max(0, ...d.gaps.filter(g => g.niche === b.name).map(g => g.score)) - Math.max(0, ...d.gaps.filter(g => g.niche === a.name).map(g => g.score)));
+  h += order.map(n => {
+    const best = d.gaps.filter(g => g.niche === n.name)[0];
+    const rows = d.cfg.langs.filter(l => n.per[l]).map(l => { const m = n.per[l], t = Math.max(m.n, 1);
+      return `<div class="stack-row"><span>${esc(LN(l))}${l === src ? ' <span class="vd vd-ref">origem</span>' : ""}</span><span class="stack" title="${m.nat} nativos, ${m.dub} dublados, ${m.for} estrangeiros">
+        <i class="s-nat" style="width:${m.nat / t * 100}%"></i><i class="s-dub" style="width:${m.dub / t * 100}%"></i><i class="s-for" style="width:${m.for / t * 100}%"></i></span>
+        <span class="val">${m.nat}/${m.dub}/${m.for} · nativos ${fmt(m.nat_views)}</span></div>`; }).join("");
+    const cols = d.cfg.langs.slice(1).filter(l => n.per[l]).map(l => { const m = n.per[l];
+      return `<div><h4>${esc(LN(l))}: dublados que ocupam</h4>${m.dub_channels.length ? `<ol>${m.dub_channels.slice(0, 4).map(c => `<li>${olChannelLink(c)}</li>`).join("")}</ol>` : `<div class="hint">nenhum</div>`}
+        <h4 style="margin-top:8px">${esc(LN(l))}: maiores nativos</h4>${m.nat_channels.length ? `<ol>${m.nat_channels.slice(0, 4).map(c => `<li>${olChannelLink(c)}</li>`).join("")}</ol>` : `<div class="hint">nenhum</div>`}</div>`; }).join("");
+    const S = n.per[src];
+    return `<div class="olniche" id="oln-${encodeURIComponent(n.name)}"><h3>${esc(n.name)} ${best ? `<span class="vd ${VERDICT[best.verdict][1]}">${VERDICT[best.verdict][0]} em ${esc(LN(best.lang).toLowerCase())}</span>` : ""}</h3>
+      <div class="hint">${d.cfg.langs.filter(l => n.terms[l]).map(l => `${l.toUpperCase()}: “${esc(n.terms[l])}”`).join(" · ")}</div>
+      ${rows}
+      <div class="cols">${S ? `<div><h4>${esc(LN(src))}: maiores nativos (referência)</h4>${S.nat_channels.length ? `<ol>${S.nat_channels.slice(0, 4).map(c => `<li>${olChannelLink(c)}</li>`).join("")}</ol>` : `<div class="hint">nenhum</div>`}</div>` : ""}${cols}</div></div>`;
+  }).join("");
+  $("out").innerHTML = h;
+  if (olOpen) { const el = document.getElementById("oln-" + olOpen); if (el) el.scrollIntoView({behavior: "smooth", block: "start"}); }
+}
+function olOpenNiche(k) { olOpen = k; const el = document.getElementById("oln-" + k); if (el) el.scrollIntoView({behavior: "smooth", block: "start"}); }
+
+function olExportCSV() {
+  if (!olData) return;
+  const rows = [["nicho","idioma_origem","idioma_alvo","veredito","score","lacuna","termo_alvo","videos_alvo","nativos","dublados","estrangeiros","views_nativas_alvo","views_dubladas_alvo","views_nativas_origem","quem_ocupa_dublando","maiores_nativos_alvo"]];
+  olData.gaps.forEach(g => { const n = olData.niches.find(x => x.name === g.niche);
+    rows.push([g.niche, g.src, g.lang, VERDICT[g.verdict][0], String(g.score).replace(".", ","), String(g.lacuna).replace(".", ","), n?.terms[g.lang] || "", g.n, g.nat, g.dub, g.for, g.nat_views, g.dub_views, g.src_nat_views,
+      g.occupiers.map(c => `${c.name} (${c.views})`).join(" | "), g.natives.map(c => `${c.name} (${c.views})`).join(" | ")]); });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], {type: "text/csv"})); a.download = `outlanguage-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
+  try { navigator.clipboard.writeText(csv); } catch (e) {}
+}
+
+/* ---- completar termos com Claude ---- */
+$("olClaude").onclick = async () => {
+  const key = $("claude_key").value.trim(), btn = $("olClaude");
+  if (!key) { $("claudeBox").open = true; $("claude_key").focus(); alertBox("Cole sua chave da Anthropic em “Análise de thumbnails com IA” para completar os termos com o Claude."); return; }
+  const langs = olLangs(), todo = olNiches.map((n, i) => ({i, n})).filter(({n}) => langs.some(l => !(n[l] || "").trim()) && (n.name || langs.some(l => (n[l] || "").trim())));
+  if (!todo.length) { alertBox("Todos os nichos já têm termo em todos os idiomas."); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Pensando…';
+  const props = Object.fromEntries(langs.map(l => [l, {type: "string"}]));
+  const schema = {type: "object", properties: {nichos: {type: "array", items: {type: "object", properties: {i: {type: "integer"}, ...props}, required: ["i", ...langs], additionalProperties: false}}}, required: ["nichos"], additionalProperties: false};
+  const text = `Para cada nicho de canal "dark" do YouTube abaixo, escreva o termo de busca que um espectador nativo digitaria no YouTube em cada idioma (${langs.map(l => l + " = " + LN(l)).join(", ")}). Use a expressão natural de cada país (pt = Brasil, es = América Latina), não tradução literal; 2 a 5 palavras. Mantenha os termos já preenchidos exatamente como estão.\n` +
+    todo.map(({i, n}) => `- i=${i}; nome: ${n.name || ""}; ${langs.map(l => `${l}: ${n[l] || "(vazio)"}`).join("; ")}`).join("\n");
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {method: "POST",
+      headers: {"content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-beta": "server-side-fallback-2026-07-01", "anthropic-dangerous-direct-browser-access": "true"},
+      body: JSON.stringify({model: "claude-opus-5-5", max_tokens: 4000, fallbacks: "default", output_config: {effort: "low", format: {type: "json_schema", schema}}, messages: [{role: "user", content: text}]})});
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { const msg = data.error?.message || r.statusText; throw new Error(r.status === 401 ? "Chave da Anthropic inválida." : /credit|billing|balance/i.test(msg) ? "Sua conta da Anthropic está sem créditos." : "Erro da API da Anthropic: " + msg); }
+    const out = JSON.parse((data.content || []).filter(b => b.type === "text").map(b => b.text).join(""));
+    (out.nichos || []).forEach(x => { const n = olNiches[x.i]; if (!n) return; langs.forEach(l => { if (!(n[l] || "").trim() && x[l]) n[l] = x[l]; }); if (!n.name) n.name = n[langs[0]] || ""; });
+    olSave(); olRenderForm();
+  } catch (e) { alertBox(e.message); }
+  finally { btn.disabled = false; btn.textContent = "Completar termos com Claude"; }
+};
+
+olRenderForm();
+setMode(mode);
 </script>
 </body>
 </html>
